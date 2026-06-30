@@ -1,0 +1,66 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import BottomNav from './components/ui/BottomNav'
+import Dashboard from './pages/Dashboard'
+import SessionList from './pages/sessions/SessionList'
+import SessionForm from './pages/sessions/SessionForm'
+import SessionDetail from './pages/sessions/SessionDetail'
+import ProjectList from './pages/projects/ProjectList'
+import ProjectForm from './pages/projects/ProjectForm'
+import ProjectDetail from './pages/projects/ProjectDetail'
+import ClientList from './pages/clients/ClientList'
+import ClientForm from './pages/clients/ClientForm'
+import ClientDetail from './pages/clients/ClientDetail'
+import StudioList from './pages/studios/StudioList'
+import StudioForm from './pages/studios/StudioForm'
+import StudioPayout from './pages/studios/StudioPayout'
+import Expenses from './pages/Expenses'
+import Settings from './pages/Settings'
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <div className="max-w-lg mx-auto relative min-h-screen bg-bg">
+        <Routes>
+          {/* Dashboard */}
+          <Route path="/" element={<Dashboard />} />
+
+          {/* Sessions */}
+          <Route path="/sessoes" element={<SessionList />} />
+          <Route path="/sessoes/nova" element={<SessionForm />} />
+          <Route path="/sessoes/:id" element={<SessionDetail />} />
+          <Route path="/sessoes/:id/editar" element={<SessionForm />} />
+
+          {/* Projects */}
+          <Route path="/projetos" element={<ProjectList />} />
+          <Route path="/projetos/novo" element={<ProjectForm />} />
+          <Route path="/projetos/:id" element={<ProjectDetail />} />
+          <Route path="/projetos/:id/editar" element={<ProjectForm />} />
+
+          {/* Clients */}
+          <Route path="/clientes" element={<ClientList />} />
+          <Route path="/clientes/novo" element={<ClientForm />} />
+          <Route path="/clientes/:id" element={<ClientDetail />} />
+          <Route path="/clientes/:id/editar" element={<ClientForm />} />
+
+          {/* Studios */}
+          <Route path="/studios" element={<StudioList />} />
+          <Route path="/studios/novo" element={<StudioForm />} />
+          <Route path="/studios/:id" element={<StudioList />} />
+          <Route path="/studios/:id/acerto" element={<StudioPayout />} />
+
+          {/* Expenses */}
+          <Route path="/despesas" element={<Expenses />} />
+          <Route path="/despesas/nova" element={<Expenses />} />
+
+          {/* Settings (includes studios & expenses nav) */}
+          <Route path="/config" element={<Settings />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+
+        <BottomNav />
+      </div>
+    </BrowserRouter>
+  )
+}
