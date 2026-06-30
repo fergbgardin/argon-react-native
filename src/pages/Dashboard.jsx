@@ -9,6 +9,7 @@ import {
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { sessionsApi, expensesApi, clientsApi } from '../lib/api'
+import { isConfigured } from '../lib/supabase'
 import { formatCurrency, formatMonthYear } from '../lib/utils'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
@@ -149,6 +150,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
+      {/* Demo banner */}
+      {!isConfigured && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center">
+          <p className="text-xs text-amber-400">Modo demo — conecte o Supabase para usar com dados reais</p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="px-4 pt-8 pb-4">
         <p className="text-xs text-muted uppercase tracking-widest mb-1">
