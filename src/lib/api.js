@@ -105,6 +105,19 @@ export const sessionPaymentsApi = {
   },
 }
 
+// ── Project Payments ──────────────────────────────────────
+export const projectPaymentsApi = {
+  list: (projectId) => isConfigured
+    ? supabase.from('project_payments').select('*').eq('project_id', projectId).order('data_pagamento', { ascending: false })
+    : mockResponse([]),
+  create: (data) => isConfigured
+    ? supabase.from('project_payments').insert(data).select().single()
+    : mockResponse({ ...data, id: crypto.randomUUID() }),
+  delete: (id) => isConfigured
+    ? supabase.from('project_payments').delete().eq('id', id)
+    : mockResponse(null),
+}
+
 // ── Studio Payouts ────────────────────────────────────────
 export const studioPayoutsApi = {
   list: () => isConfigured

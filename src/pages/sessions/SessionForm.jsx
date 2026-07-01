@@ -310,44 +310,46 @@ export default function SessionForm() {
               )}
             </Card>
 
-            {/* Payments */}
-            <Card className="p-4 flex flex-col gap-3">
-              <p className="text-xs text-muted uppercase tracking-wide">Pagamento</p>
-              <div className="flex gap-2 flex-wrap">
-                {PAYMENT_METHODS.map(({ key, label }) => (
-                  <Chip
-                    key={key}
-                    active={activePayMethods.includes(key)}
-                    onClick={() => togglePayMethod(key)}
-                  >
-                    {label}
-                  </Chip>
-                ))}
-              </div>
-
-              {activePayMethods.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {activePayMethods.map((m) => (
-                    <Input
-                      key={m}
-                      label={PAYMENT_METHODS.find((p) => p.key === m)?.label}
-                      type="number"
-                      step="0.01"
-                      placeholder="0,00"
-                      value={payValues[m] || ''}
-                      onChange={(e) =>
-                        setPayValues((prev) => ({ ...prev, [m]: e.target.value }))
-                      }
-                    />
+            {/* Payments — hidden for fechado projects (payment managed at project level) */}
+            {selectedProject?.tipo_cobranca !== 'fechado' && (
+              <Card className="p-4 flex flex-col gap-3">
+                <p className="text-xs text-muted uppercase tracking-wide">Pagamento</p>
+                <div className="flex gap-2 flex-wrap">
+                  {PAYMENT_METHODS.map(({ key, label }) => (
+                    <Chip
+                      key={key}
+                      active={activePayMethods.includes(key)}
+                      onClick={() => togglePayMethod(key)}
+                    >
+                      {label}
+                    </Chip>
                   ))}
-                  {activePayMethods.length > 1 && (
-                    <p className="text-xs text-muted">
-                      Total: R$ {totalPayments().toFixed(2)}
-                    </p>
-                  )}
                 </div>
-              )}
-            </Card>
+
+                {activePayMethods.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {activePayMethods.map((m) => (
+                      <Input
+                        key={m}
+                        label={PAYMENT_METHODS.find((p) => p.key === m)?.label}
+                        type="number"
+                        step="0.01"
+                        placeholder="0,00"
+                        value={payValues[m] || ''}
+                        onChange={(e) =>
+                          setPayValues((prev) => ({ ...prev, [m]: e.target.value }))
+                        }
+                      />
+                    ))}
+                    {activePayMethods.length > 1 && (
+                      <p className="text-xs text-muted">
+                        Total: R$ {totalPayments().toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
 
             {/* Commission */}
             {selectedStudio && (
