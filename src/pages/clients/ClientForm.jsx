@@ -1,15 +1,20 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { clientsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
 import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientForm() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const isEditing = !!id
+
   const [loading, setLoading] = useState(false)
+  const [initLoading, setInitLoading] = useState(isEditing)
   const [form, setForm] = useState({
     nome: '',
     whatsapp: '',
@@ -20,6 +25,24 @@ export default function ClientForm() {
     alerta_saude: '',
   })
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (!isEditing) return
+    clientsApi.get(id).then(({ data }) => {
+      if (data) {
+        setForm({
+          nome: data.nome || '',
+          whatsapp: data.whatsapp || '',
+          cpf: data.cpf || '',
+          nascimento: data.nascimento || '',
+          cidade: data.cidade || '',
+          estado: data.estado || '',
+          alerta_saude: data.alerta_saude || '',
+        })
+      }
+      setInitLoading(false)
+    })
+  }, [id])
 
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -49,21 +72,25 @@ export default function ClientForm() {
       alerta_saude: form.alerta_saude || null,
     }
 
-    const { data: client, error } = await clientsApi.create(data)
+    const { error } = isEditing
+      ? await clientsApi.update(id, data)
+      : await clientsApi.create(data)
+
     if (error) {
       setErrors({ submit: error.message })
       setLoading(false)
       return
     }
-    navigate('/clientes')
+    navigate(isEditing ? `/clientes/${id}` : '/clientes')
   }
+
+  if (initLoading) return <LoadingSpinner fullPage />
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <PageHeader title="Novo Cliente" />
+      <PageHeader title={isEditing ? 'Editar Cliente' : 'Novo Cliente'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
-        {/* Required */}
         <Card className="p-4 flex flex-col gap-4">
           <Input
             label="Nome completo *"
@@ -84,10 +111,8 @@ export default function ClientForm() {
           />
         </Card>
 
-        {/* Optional */}
         <Card className="p-4 flex flex-col gap-4">
           <p className="text-xs text-muted uppercase tracking-wide">Dados opcionais</p>
-
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="CPF"
@@ -102,7 +127,6 @@ export default function ClientForm() {
               onChange={(e) => handleChange('nascimento', e.target.value)}
             />
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Cidade"
@@ -120,7 +144,6 @@ export default function ClientForm() {
           </div>
         </Card>
 
-        {/* Health alert */}
         <Card className="p-4">
           <Textarea
             label="Alerta de saúde"
@@ -136,7 +159,7 @@ export default function ClientForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          Salvar Cliente
+          {isEditing ? 'Salvar alterações' : 'Salvar Cliente'}
         </Button>
       </form>
     </div>

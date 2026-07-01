@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { projectsApi, clientsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
@@ -10,6 +10,9 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ProjectForm() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const isEditing = !!id
+
   const [loading, setLoading] = useState(false)
   const [clients, setClients] = useState([])
   const [initLoading, setInitLoading] = useState(true)
@@ -26,11 +29,26 @@ export default function ProjectForm() {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    clientsApi.list().then(({ data }) => {
-      setClients(data || [])
+    const promises = [clientsApi.list()]
+    if (isEditing) promises.push(projectsApi.get(id))
+
+    Promise.all(promises).then(([clientsRes, projectRes]) => {
+      setClients(clientsRes.data || [])
+      if (projectRes?.data) {
+        const p = projectRes.data
+        setForm({
+          client_id: p.client_id || '',
+          nome: p.nome || '',
+          area_corpo: p.area_corpo || '',
+          tipo_cobranca: p.tipo_cobranca || 'por_sessao',
+          valor_total: p.valor_total ?? '',
+          sessoes_estimadas: p.sessoes_estimadas ?? '',
+          status: p.status || 'ativo',
+        })
+      }
       setInitLoading(false)
     })
-  }, [])
+  }, [id])
 
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -55,25 +73,28 @@ export default function ProjectForm() {
       nome: form.nome,
       area_corpo: form.area_corpo || null,
       tipo_cobranca: form.tipo_cobranca,
-      valor_total: form.valor_total ? parseFloat(form.valor_total) : null,
-      sessoes_estimadas: form.sessoes_estimadas ? parseInt(form.sessoes_estimadas) : null,
+      valor_total: form.valor_total !== '' ? parseFloat(form.valor_total) : null,
+      sessoes_estimadas: form.sessoes_estimadas !== '' ? parseInt(form.sessoes_estimadas) : null,
       status: form.status,
     }
 
-    const { data: project, error } = await projectsApi.create(data)
+    const { error } = isEditing
+      ? await projectsApi.update(id, data)
+      : await projectsApi.create(data)
+
     if (error) {
       setErrors({ submit: error.message })
       setLoading(false)
       return
     }
-    navigate('/projetos')
+    navigate(isEditing ? `/projetos/${id}` : '/projetos')
   }
 
   if (initLoading) return <LoadingSpinner fullPage />
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <PageHeader title="Novo Projeto" />
+      <PageHeader title={isEditing ? 'Editar Projeto' : 'Novo Projeto'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
@@ -156,7 +177,7 @@ export default function ProjectForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          Criar Projeto
+          {isEditing ? 'Salvar alterações' : 'Criar Projeto'}
         </Button>
       </form>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi } from '../../lib/api'
 import { calcComissao } from '../../lib/utils'
@@ -21,7 +21,9 @@ const PAYMENT_METHODS = [
 
 export default function SessionForm() {
   const navigate = useNavigate()
+  const { id } = useParams()
   const [searchParams] = useSearchParams()
+  const isEditing = !!id
   const preProjectId = searchParams.get('project_id')
 
   const [loading, setLoading] = useState(false)
@@ -55,19 +57,40 @@ export default function SessionForm() {
 
   async function loadInit() {
     setInitLoading(true)
-    const [pRes, sRes, stRes] = await Promise.all([
-      projectsApi.list(),
-      studiosApi.list(),
-      settingsApi.get(),
-    ])
+    const promises = [projectsApi.list(), studiosApi.list(), settingsApi.get()]
+    if (isEditing) promises.push(sessionsApi.get(id))
+
+    const [pRes, sRes, stRes, sessionRes] = await Promise.all(promises)
     setProjects(pRes.data || [])
     const studioList = sRes.data || []
     setStudios(studioList)
     setSettings(stRes.data)
 
-    // Pre-select favorite studio
-    const fav = studioList.find((s) => s.is_favorite)
-    if (fav) setForm((f) => ({ ...f, studio_id: fav.id }))
+    if (isEditing && sessionRes?.data) {
+      const s = sessionRes.data
+      setForm({
+        project_id: s.project_id || '',
+        studio_id: s.studio_id || '',
+        status: s.status || 'agendada',
+        data_sessao: s.data_sessao || new Date().toISOString().split('T')[0],
+        custo_material: s.custo_material ? '_edit' : '',
+        custo_material_valor: s.custo_material ?? '',
+        valor_comissao_estudio: s.valor_comissao_estudio ?? '',
+        agulhas: s.agulhas || '',
+        pigmentos: s.pigmentos || '',
+        obs: s.obs || '',
+      })
+      const pays = s.session_payments || []
+      if (pays.length > 0) {
+        setActivePayMethods(pays.map((p) => p.forma))
+        const vals = {}
+        pays.forEach((p) => { vals[p.forma] = p.valor.toString() })
+        setPayValues(vals)
+      }
+    } else {
+      const fav = studioList.find((s) => s.is_favorite)
+      if (fav) setForm((f) => ({ ...f, studio_id: fav.id }))
+    }
     setInitLoading(false)
   }
 
@@ -171,7 +194,9 @@ export default function SessionForm() {
       obs: form.obs || null,
     }
 
-    const { data: session, error } = await sessionsApi.create(sessionData)
+    const { data: session, error } = isEditing
+      ? await sessionsApi.update(id, sessionData)
+      : await sessionsApi.create(sessionData)
 
     if (error) {
       setErrors({ submit: error.message })
@@ -179,12 +204,13 @@ export default function SessionForm() {
       return
     }
 
+    const sessionId = isEditing ? id : session?.id
     const pays = buildPayments()
-    if (pays.length > 0) {
-      await sessionPaymentsApi.upsertForSession(session.id, pays)
+    if (isEditing || pays.length > 0) {
+      await sessionPaymentsApi.upsertForSession(sessionId, pays)
     }
 
-    navigate('/sessoes')
+    navigate(isEditing ? `/sessoes/${id}` : '/sessoes')
   }
 
   if (initLoading) return <LoadingSpinner fullPage />
@@ -196,7 +222,7 @@ export default function SessionForm() {
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <PageHeader title="Nova Sessão" />
+      <PageHeader title={isEditing ? 'Editar Sessão' : 'Nova Sessão'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         {/* Essentials */}
