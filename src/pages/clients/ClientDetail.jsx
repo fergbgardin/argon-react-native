@@ -26,7 +26,12 @@ export default function ClientDetail() {
   )
 
   if (cLoading) return <LoadingSpinner fullPage />
-  if (!client) return null
+  if (!cLoading && !client) return (
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
+      <p className="text-muted">Cliente não encontrado</p>
+      <button onClick={() => navigate('/clientes')} className="text-primary text-sm">← Voltar para clientes</button>
+    </div>
+  )
 
   async function handleDelete() {
     await clientsApi.delete(id)

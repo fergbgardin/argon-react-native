@@ -66,7 +66,7 @@ export default function ProjectForm() {
       setLoading(false)
       return
     }
-    navigate(`/projetos/${project.id}`)
+    navigate('/projetos')
   }
 
   if (initLoading) return <LoadingSpinner fullPage />

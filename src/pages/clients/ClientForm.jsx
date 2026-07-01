@@ -55,7 +55,7 @@ export default function ClientForm() {
       setLoading(false)
       return
     }
-    navigate(`/clientes/${client.id}`)
+    navigate('/clientes')
   }
 
   return (

@@ -26,7 +26,12 @@ export default function ProjectDetail() {
   const { data: sessions, loading: sLoading } = useData(() => sessionsApi.listByProject(id), [id])
 
   if (pLoading || sLoading) return <LoadingSpinner fullPage />
-  if (!project) return null
+  if (!pLoading && !project) return (
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
+      <p className="text-muted">Projeto não encontrado</p>
+      <button onClick={() => navigate('/projetos')} className="text-primary text-sm">← Voltar para projetos</button>
+    </div>
+  )
 
   const client = project.clients
   const cfg = statusConfig[project.status] || statusConfig.ativo

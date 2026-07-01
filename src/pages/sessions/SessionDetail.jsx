@@ -45,7 +45,12 @@ export default function SessionDetail() {
   const fileRef = useRef()
 
   if (loading) return <LoadingSpinner fullPage />
-  if (!session) return null
+  if (!loading && !session) return (
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
+      <p className="text-muted">Sessão não encontrada</p>
+      <button onClick={() => navigate('/sessoes')} className="text-primary text-sm">← Voltar para sessões</button>
+    </div>
+  )
 
   const client = session.projects?.clients
   const project = session.projects

@@ -184,7 +184,7 @@ export default function SessionForm() {
       await sessionPaymentsApi.upsertForSession(session.id, pays)
     }
 
-    navigate(`/sessoes/${session.id}`)
+    navigate('/sessoes')
   }
 
   if (initLoading) return <LoadingSpinner fullPage />
