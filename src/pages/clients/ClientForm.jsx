@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { clientsApi } from '../../lib/api'
+import allCities from '../../lib/brazilianCities.json'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
 import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
-
-let municipiosCache = null
 
 export default function ClientForm() {
   const navigate = useNavigate()
@@ -31,17 +30,6 @@ export default function ClientForm() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const cityDebounceRef = useRef(null)
 
-  async function loadMunicipios() {
-    if (municipiosCache) return municipiosCache
-    const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome')
-    const data = await res.json()
-    municipiosCache = data.map((m) => ({
-      nome: m.nome,
-      uf: m.microrregiao.mesorregiao.UF.sigla,
-    }))
-    return municipiosCache
-  }
-
   function handleCidadeChange(value) {
     handleChange('cidade', value)
     clearTimeout(cityDebounceRef.current)
@@ -50,15 +38,15 @@ export default function ClientForm() {
       setShowSuggestions(false)
       return
     }
-    cityDebounceRef.current = setTimeout(async () => {
-      const all = await loadMunicipios()
-      const lower = value.toLowerCase()
-      const matches = all
-        .filter((m) => m.nome.toLowerCase().startsWith(lower))
+    cityDebounceRef.current = setTimeout(() => {
+      const normalize = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      const query = normalize(value)
+      const matches = allCities
+        .filter((m) => normalize(m.nome).startsWith(query))
         .slice(0, 8)
       setCitySuggestions(matches)
       setShowSuggestions(matches.length > 0)
-    }, 300)
+    }, 150)
   }
 
   function selectCity(city) {
