@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, FolderKanban } from 'lucide-react'
+import { Plus, FolderKanban, Search, X } from 'lucide-react'
 import { projectsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import { formatCurrency } from '../../lib/utils'
@@ -19,13 +19,19 @@ const statusConfig = {
 export default function ProjectList() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('ativo')
+  const [search, setSearch] = useState('')
   const { data: projects, loading } = useData(() => projectsApi.list())
 
   if (loading) return <LoadingSpinner fullPage />
 
+  const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
+
   const filtered = (projects || []).filter((p) => {
-    if (filter === 'todos') return true
-    return p.status === filter
+    const statusOk = filter === 'todos' || p.status === filter
+    if (!statusOk) return false
+    if (!search.trim()) return true
+    const q = normalize(search)
+    return normalize(p.clients?.nome).includes(q) || normalize(p.nome).includes(q)
   })
 
   return (
@@ -35,6 +41,28 @@ export default function ProjectList() {
         <Button size="icon" onClick={() => navigate('/projetos/novo')}>
           <Plus size={18} />
         </Button>
+      </div>
+
+      {/* Search */}
+      <div className="px-4 mb-3">
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Buscar cliente ou projeto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[#2A2A2A] border border-[#333] rounded-lg pl-9 pr-8 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-4 flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
