@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { clientsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
@@ -7,6 +7,8 @@ import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+
+let municipiosCache = null
 
 export default function ClientForm() {
   const navigate = useNavigate()
@@ -25,6 +27,46 @@ export default function ClientForm() {
     alerta_saude: '',
   })
   const [errors, setErrors] = useState({})
+  const [citySuggestions, setCitySuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const cityDebounceRef = useRef(null)
+
+  async function loadMunicipios() {
+    if (municipiosCache) return municipiosCache
+    const res = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome')
+    const data = await res.json()
+    municipiosCache = data.map((m) => ({
+      nome: m.nome,
+      uf: m.microrregiao.mesorregiao.UF.sigla,
+    }))
+    return municipiosCache
+  }
+
+  function handleCidadeChange(value) {
+    handleChange('cidade', value)
+    clearTimeout(cityDebounceRef.current)
+    if (value.length < 2) {
+      setCitySuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+    cityDebounceRef.current = setTimeout(async () => {
+      const all = await loadMunicipios()
+      const lower = value.toLowerCase()
+      const matches = all
+        .filter((m) => m.nome.toLowerCase().startsWith(lower))
+        .slice(0, 8)
+      setCitySuggestions(matches)
+      setShowSuggestions(matches.length > 0)
+    }, 300)
+  }
+
+  function selectCity(city) {
+    handleChange('cidade', city.nome)
+    handleChange('estado', city.uf)
+    setCitySuggestions([])
+    setShowSuggestions(false)
+  }
 
   useEffect(() => {
     if (!isEditing) return
@@ -128,12 +170,32 @@ export default function ClientForm() {
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Cidade"
-              placeholder="São Paulo"
-              value={form.cidade}
-              onChange={(e) => handleChange('cidade', e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                label="Cidade"
+                placeholder="São Paulo"
+                value={form.cidade}
+                autoComplete="off"
+                onChange={(e) => handleCidadeChange(e.target.value)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                onFocus={() => citySuggestions.length > 0 && setShowSuggestions(true)}
+              />
+              {showSuggestions && (
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-[#1E1E1E] border border-[#333] rounded-lg overflow-hidden shadow-lg">
+                  {citySuggestions.map((city) => (
+                    <button
+                      key={`${city.nome}-${city.uf}`}
+                      type="button"
+                      onMouseDown={() => selectCity(city)}
+                      className="w-full px-3 py-2.5 text-left text-sm text-white hover:bg-[#2A2A2A] flex justify-between items-center"
+                    >
+                      <span>{city.nome}</span>
+                      <span className="text-xs text-muted ml-2">{city.uf}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Input
               label="Estado"
               placeholder="SP"
