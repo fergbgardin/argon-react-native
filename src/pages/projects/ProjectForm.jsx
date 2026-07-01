@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Search } from 'lucide-react'
 import { projectsApi, clientsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -27,13 +27,23 @@ export default function ProjectForm() {
     status: 'ativo',
   })
   const [errors, setErrors] = useState({})
+  const [clientSearch, setClientSearch] = useState('')
+  const [showClientList, setShowClientList] = useState(false)
+  const clientSearchRef = useRef(null)
+
+  const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
+  const filteredClients = clients.filter((c) =>
+    normalize(c.nome).includes(normalize(clientSearch))
+  )
+  const selectedClient = clients.find((c) => c.id === form.client_id)
 
   useEffect(() => {
     const promises = [clientsApi.list()]
     if (isEditing) promises.push(projectsApi.get(id))
 
     Promise.all(promises).then(([clientsRes, projectRes]) => {
-      setClients(clientsRes.data || [])
+      const clientList = clientsRes.data || []
+      setClients(clientList)
       if (projectRes?.data) {
         const p = projectRes.data
         setForm({
@@ -45,6 +55,8 @@ export default function ProjectForm() {
           sessoes_estimadas: p.sessoes_estimadas ?? '',
           status: p.status || 'ativo',
         })
+        const c = clientList.find((c) => c.id === p.client_id)
+        if (c) setClientSearch(c.nome)
       }
       setInitLoading(false)
     })
@@ -98,17 +110,54 @@ export default function ProjectForm() {
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
-          <Select
-            label="Cliente *"
-            value={form.client_id}
-            onChange={(e) => handleChange('client_id', e.target.value)}
-            error={errors.client_id}
-          >
-            <option value="">Selecionar cliente...</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>{c.nome}</option>
-            ))}
-          </Select>
+          <div>
+            <label className="text-xs font-medium text-muted uppercase tracking-wide block mb-1">
+              Cliente *
+            </label>
+            <div className="relative">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+              <input
+                ref={clientSearchRef}
+                type="text"
+                placeholder="Buscar cliente..."
+                value={showClientList || !selectedClient ? clientSearch : selectedClient.nome}
+                autoComplete="off"
+                onFocus={() => {
+                  setClientSearch('')
+                  setShowClientList(true)
+                }}
+                onBlur={() => setTimeout(() => {
+                  setShowClientList(false)
+                  if (!form.client_id) setClientSearch('')
+                }, 150)}
+                onChange={(e) => setClientSearch(e.target.value)}
+                className={`w-full bg-[#2A2A2A] border rounded-lg pl-9 pr-3 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors ${errors.client_id ? 'border-red-500' : 'border-[#333]'}`}
+              />
+              {showClientList && (
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-[#1E1E1E] border border-[#333] rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
+                  {filteredClients.length === 0 ? (
+                    <p className="px-3 py-2.5 text-sm text-muted">Nenhum cliente encontrado</p>
+                  ) : (
+                    filteredClients.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onMouseDown={() => {
+                          handleChange('client_id', c.id)
+                          setClientSearch(c.nome)
+                          setShowClientList(false)
+                        }}
+                        className={`w-full px-3 py-2.5 text-left text-sm hover:bg-[#2A2A2A] transition-colors ${form.client_id === c.id ? 'text-primary' : 'text-white'}`}
+                      >
+                        {c.nome}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+            {errors.client_id && <p className="text-xs text-red-400 mt-1">{errors.client_id}</p>}
+          </div>
 
           <Input
             label="Nome do projeto *"
