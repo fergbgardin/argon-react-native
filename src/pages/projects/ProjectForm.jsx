@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { projectsApi, clientsApi, projectPaymentsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
@@ -45,6 +45,9 @@ export default function ProjectForm() {
   const [payForma, setPayForma] = useState('pix')
   const [payValor, setPayValor] = useState('')
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0])
+  const [pay2Enabled, setPay2Enabled] = useState(false)
+  const [pay2Forma, setPay2Forma] = useState('credito')
+  const [pay2Valor, setPay2Valor] = useState('')
 
   const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
   const filteredClients = clients.filter((c) =>
@@ -123,12 +126,20 @@ export default function ProjectForm() {
       return
     }
 
-    // Register initial payment for fechado projects if value was entered
+    // Register initial payment(s) for fechado projects if value was entered
     if (form.tipo_cobranca === 'fechado' && payValor && parseFloat(payValor) > 0) {
       await projectPaymentsApi.create({
         project_id: project.id,
         forma: payForma,
         valor: parseFloat(payValor),
+        data_pagamento: payDate,
+      })
+    }
+    if (form.tipo_cobranca === 'fechado' && pay2Enabled && pay2Valor && parseFloat(pay2Valor) > 0) {
+      await projectPaymentsApi.create({
+        project_id: project.id,
+        forma: pay2Forma,
+        valor: parseFloat(pay2Valor),
         data_pagamento: payDate,
       })
     }
@@ -258,6 +269,8 @@ export default function ProjectForm() {
         {!isEditing && form.tipo_cobranca === 'fechado' && (
           <Card className="p-4 flex flex-col gap-3">
             <p className="text-xs text-muted uppercase tracking-wide">Pagamento recebido</p>
+
+            {/* First payment */}
             <div className="flex gap-2 flex-wrap">
               {PAYMENT_METHODS.map(({ key, label }) => (
                 <Chip
@@ -285,6 +298,55 @@ export default function ProjectForm() {
                 onChange={(e) => setPayDate(e.target.value)}
               />
             </div>
+
+            {/* Second payment */}
+            {pay2Enabled ? (
+              <div className="flex flex-col gap-3 pt-1 border-t border-[#2A2A2A]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted uppercase tracking-wide">Segunda forma</span>
+                  <button
+                    type="button"
+                    onClick={() => { setPay2Enabled(false); setPay2Valor('') }}
+                    className="text-muted hover:text-red-400 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, label }) => (
+                    <Chip
+                      key={key}
+                      active={pay2Forma === key}
+                      onClick={() => setPay2Forma(key)}
+                    >
+                      {label}
+                    </Chip>
+                  ))}
+                </div>
+                <Input
+                  label="Valor (R$)"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={pay2Valor}
+                  onChange={(e) => setPay2Valor(e.target.value)}
+                />
+                {payValor && pay2Valor && (
+                  <p className="text-xs text-muted">
+                    Total: R$ {(parseFloat(payValor) + parseFloat(pay2Valor)).toFixed(2)}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPay2Enabled(true)}
+                className="text-xs text-primary text-left hover:opacity-80 transition-opacity"
+              >
+                + Dividir em outra forma de pagamento
+              </button>
+            )}
+
             <p className="text-xs text-muted">Deixe em branco se ainda não recebeu</p>
           </Card>
         )}
