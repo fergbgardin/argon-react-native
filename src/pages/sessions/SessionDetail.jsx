@@ -1,27 +1,17 @@
 import { useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  Edit, Trash2, AlertTriangle, Camera, ExternalLink, CheckCircle2, Clock,
-  ChevronDown, ChevronUp
+  Edit, Trash2, AlertTriangle, Camera, ExternalLink, CheckCircle2
 } from 'lucide-react'
-import { sessionsApi, sessionPaymentsApi, storageApi } from '../../lib/api'
+import { sessionsApi, storageApi } from '../../lib/api'
 import { formatDate, formatCurrency, whatsappLink } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
 import PageHeader from '../../components/ui/PageHeader'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
-import Chip from '../../components/ui/Chip'
-import Input from '../../components/ui/Input'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
-
-const PAYMENT_METHODS = [
-  { key: 'pix', label: 'PIX' },
-  { key: 'credito', label: 'Crédito' },
-  { key: 'debito', label: 'Débito' },
-  { key: 'dinheiro', label: 'Dinheiro' },
-]
 
 export default function SessionDetail() {
   const { id } = useParams()
@@ -32,16 +22,6 @@ export default function SessionDetail() {
   const [deleteModal, setDeleteModal] = useState(false)
   const [uploadLoading, setUploadLoading] = useState(false)
   const [photoPreview, setPhotoPreview] = useState(null)
-  const [techExpanded, setTechExpanded] = useState(false)
-
-  // Complete session form
-  const [activePayMethods, setActivePayMethods] = useState([])
-  const [payValues, setPayValues] = useState({})
-  const [materialSize, setMaterialSize] = useState('')
-  const [materialValue, setMaterialValue] = useState('')
-  const [comissao, setComissao] = useState('')
-  const [agulhas, setAgulhas] = useState('')
-  const [obs, setObs] = useState('')
   const fileRef = useRef()
 
 
@@ -60,12 +40,6 @@ export default function SessionDetail() {
   const payments = session.session_payments || []
   const totalPago = payments.reduce((s, p) => s + (p.valor || 0), 0)
 
-  function togglePayMethod(method) {
-    setActivePayMethods((prev) =>
-      prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method]
-    )
-  }
-
   async function handleDelete() {
     await sessionsApi.delete(id)
     navigate(-1)
@@ -73,22 +47,8 @@ export default function SessionDetail() {
 
   async function handleComplete() {
     setCompleting(true)
-    const pays = activePayMethods.map((m) => ({
-      forma: m,
-      valor: parseFloat(payValues[m]) || 0,
-    }))
-
-    await Promise.all([
-      sessionsApi.update(id, {
-        status: 'concluida',
-        custo_material: materialValue ? parseFloat(materialValue) : null,
-        valor_comissao_estudio: comissao ? parseFloat(comissao) : null,
-        agulhas: agulhas || null,
-        obs: obs || null,
-      }),
-      pays.length > 0 ? sessionPaymentsApi.upsertForSession(id, pays) : Promise.resolve(),
-    ])
-
+    // Only flip the status — financials were already filled in the session form
+    await sessionsApi.update(id, { status: 'concluida' })
     await refetch()
     setCompleting(false)
   }
@@ -319,61 +279,23 @@ export default function SessionDetail() {
           </Card>
         )}
 
-        {/* Complete session flow */}
+        {/* Complete session */}
         {isAgendada && (
-          <Card className="p-4 border-primary/30">
-            <div className="flex items-center gap-2 mb-4">
+          <Card className="p-4 border-primary/30 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
               <CheckCircle2 size={18} className="text-primary" />
               <p className="text-sm font-medium text-white">Concluir sessão</p>
             </div>
-
-            {/* Payments */}
-            <div className="mb-4">
-              <p className="text-xs text-muted uppercase tracking-wide mb-2">Pagamento</p>
-              <div className="flex gap-2 flex-wrap mb-2">
-                {PAYMENT_METHODS.map(({ key, label }) => (
-                  <Chip
-                    key={key}
-                    active={activePayMethods.includes(key)}
-                    onClick={() => togglePayMethod(key)}
-                  >
-                    {label}
-                  </Chip>
-                ))}
-              </div>
-              {activePayMethods.map((m) => (
-                <Input
-                  key={m}
-                  label={PAYMENT_METHODS.find((p) => p.key === m)?.label}
-                  type="number"
-                  step="0.01"
-                  placeholder="0,00"
-                  className="mt-2"
-                  value={payValues[m] || ''}
-                  onChange={(e) =>
-                    setPayValues((prev) => ({ ...prev, [m]: e.target.value }))
-                  }
-                />
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Input
-                label="Custo material (R$)"
-                type="number"
-                step="0.01"
-                value={materialValue}
-                onChange={(e) => setMaterialValue(e.target.value)}
-              />
-              <Input
-                label="Comissão estúdio (R$)"
-                type="number"
-                step="0.01"
-                value={comissao}
-                onChange={(e) => setComissao(e.target.value)}
-              />
-            </div>
-
+            <p className="text-xs text-muted">
+              Confirme pagamento, material e comissão pelo botão de editar (lápis) antes de concluir.
+              Ao concluir, os dados já preenchidos são mantidos.
+            </p>
+            {!(session.valor_comissao_estudio > 0) && (
+              <p className="text-xs text-amber-400">
+                Atenção: esta sessão está sem comissão de estúdio. Se houver comissão a repassar,
+                edite a sessão e preencha antes de concluir.
+              </p>
+            )}
             <Button full onClick={handleComplete} loading={completing}>
               <CheckCircle2 size={16} /> Marcar como Concluída
             </Button>
