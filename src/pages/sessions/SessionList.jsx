@@ -130,7 +130,7 @@ export default function SessionList() {
                       )}
                     </div>
                   </div>
-                  {session.status === 'concluida' && (
+                  {total > 0 && (
                     <div className="text-right flex-shrink-0">
                       <p className="text-white font-semibold">{formatCurrency(total)}</p>
                       {session.valor_comissao_estudio > 0 && (

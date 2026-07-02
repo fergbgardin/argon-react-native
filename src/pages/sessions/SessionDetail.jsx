@@ -171,8 +171,8 @@ export default function SessionDetail() {
           )}
         </Card>
 
-        {/* Financial info (concluida) */}
-        {!isAgendada && (
+        {/* Financial info — shown when concluded or whenever a payment exists */}
+        {(!isAgendada || payments.length > 0) && (
           <Card className="p-4 flex flex-col gap-3">
             <p className="text-xs text-muted uppercase tracking-wide">Financeiro</p>
 

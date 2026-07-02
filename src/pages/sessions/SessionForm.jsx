@@ -243,7 +243,12 @@ export default function SessionForm() {
     const sessionId = isEditing ? id : session?.id
     const pays = buildPayments()
     if (isEditing || pays.length > 0) {
-      await sessionPaymentsApi.upsertForSession(sessionId, pays)
+      const { error: payError } = await sessionPaymentsApi.upsertForSession(sessionId, pays)
+      if (payError) {
+        setErrors({ submit: `Sessão salva, mas o pagamento falhou: ${payError.message}` })
+        setLoading(false)
+        return
+      }
     }
 
     navigate(isEditing ? `/sessoes/${id}` : '/sessoes')
