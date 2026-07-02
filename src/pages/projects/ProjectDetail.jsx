@@ -53,6 +53,12 @@ export default function ProjectDetail() {
   const cfg = statusConfig[project.status] || statusConfig.ativo
   const concludedSessions = (sessions || []).filter((s) => s.status === 'concluida')
 
+  // Number sessions chronologically (oldest = 1)
+  const sessionNumberMap = {}
+  ;[...(sessions || [])]
+    .sort((a, b) => a.data_sessao.localeCompare(b.data_sessao))
+    .forEach((s, i) => { sessionNumberMap[s.id] = i + 1 })
+
   const sessoesFeitas = concludedSessions.length
   const sessoesEstimadas = project.sessoes_estimadas || 0
   const progress = sessoesEstimadas > 0 ? Math.min((sessoesFeitas / sessoesEstimadas) * 100, 100) : 0
@@ -295,8 +301,10 @@ export default function ProjectDetail() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-white">{formatDate(s.data_sessao)}</p>
-                      <p className="text-xs text-muted">{s.studios?.nome}</p>
+                      <p className="text-sm text-white">Sessão {sessionNumberMap[s.id]}</p>
+                      <p className="text-xs text-muted">
+                        {formatDate(s.data_sessao)}{s.studios?.nome ? ` · ${s.studios.nome}` : ''}
+                      </p>
                     </div>
                     <Badge variant={s.status === 'concluida' ? 'success' : 'warning'}>
                       {s.status === 'concluida' ? 'Concluída' : 'Agendada'}

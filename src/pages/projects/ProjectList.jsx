@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, FolderKanban, Search, X } from 'lucide-react'
-import { projectsApi } from '../../lib/api'
+import { projectsApi, sessionsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import { formatCurrency } from '../../lib/utils'
 import Card from '../../components/ui/Card'
@@ -21,8 +21,17 @@ export default function ProjectList() {
   const [filter, setFilter] = useState('ativo')
   const [search, setSearch] = useState('')
   const { data: projects, loading } = useData(() => projectsApi.list())
+  const { data: sessions, loading: sLoading } = useData(() => sessionsApi.list())
 
-  if (loading) return <LoadingSpinner fullPage />
+  if (loading || sLoading) return <LoadingSpinner fullPage />
+
+  // Count concluded sessions per project
+  const doneByProject = {}
+  ;(sessions || []).forEach((s) => {
+    if (s.status === 'concluida') {
+      doneByProject[s.project_id] = (doneByProject[s.project_id] || 0) + 1
+    }
+  })
 
   const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
 
@@ -121,6 +130,10 @@ export default function ProjectList() {
                     )}
                     <p className="text-xs text-muted">
                       {project.tipo_cobranca === 'fechado' ? 'Fechado' : 'Por sessão'}
+                      <span className="ml-1.5 text-primary/70">
+                        · {doneByProject[project.id] || 0}
+                        {project.sessoes_estimadas ? `/${project.sessoes_estimadas}` : ''} sessão(ões)
+                      </span>
                     </p>
                   </div>
                   {project.valor_total > 0 && (
