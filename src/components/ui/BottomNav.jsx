@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, CalendarDays, FolderKanban, Users, Settings } from 'lucide-react'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Início' },
+  { to: '/sessoes', icon: CalendarDays, label: 'Sessões' },
   { to: '/projetos', icon: FolderKanban, label: 'Projetos' },
   { to: '/clientes', icon: Users, label: 'Clientes' },
   { to: '/config', icon: Settings, label: 'Config' },
