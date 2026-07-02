@@ -16,6 +16,13 @@ const PAYMENT_METHODS = [
   { key: 'dinheiro', label: 'Dinheiro' },
 ]
 
+const BODY_AREA_GROUPS = [
+  { label: 'Cabeça / Pescoço', areas: ['Cabeça', 'Nuca', 'Pescoço', 'Rosto'] },
+  { label: 'Tronco', areas: ['Peitoral', 'Clavícula', 'Costela', 'Abdômen', 'Costas', 'Lombar'] },
+  { label: 'Braços', areas: ['Ombro', 'Braço', 'Antebraço', 'Cotovelo', 'Pulso', 'Mão', 'Dedos'] },
+  { label: 'Pernas', areas: ['Quadril', 'Coxa', 'Joelho', 'Canela', 'Panturrilha', 'Tornozelo', 'Pé'] },
+]
+
 export default function ProjectForm() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -35,6 +42,9 @@ export default function ProjectForm() {
     status: 'ativo',
   })
   const [errors, setErrors] = useState({})
+
+  // Body areas
+  const [selectedAreas, setSelectedAreas] = useState([])
 
   // Client search
   const [clientSearch, setClientSearch] = useState('')
@@ -75,6 +85,7 @@ export default function ProjectForm() {
         })
         const c = clientList.find((c) => c.id === p.client_id)
         if (c) setClientSearch(c.nome)
+        if (p.area_corpo) setSelectedAreas(p.area_corpo.split(', ').filter(Boolean))
       }
       setInitLoading(false)
     })
@@ -101,7 +112,7 @@ export default function ProjectForm() {
     const data = {
       client_id: form.client_id,
       nome: form.nome,
-      area_corpo: form.area_corpo || null,
+      area_corpo: selectedAreas.length > 0 ? selectedAreas.join(', ') : null,
       tipo_cobranca: form.tipo_cobranca,
       valor_total: form.valor_total !== '' ? parseFloat(form.valor_total) : null,
       sessoes_estimadas: form.sessoes_estimadas !== '' ? parseInt(form.sessoes_estimadas) : null,
@@ -210,12 +221,31 @@ export default function ProjectForm() {
             error={errors.nome}
           />
 
-          <Input
-            label="Área do corpo"
-            placeholder="Ex: Braço direito, Costela..."
-            value={form.area_corpo}
-            onChange={(e) => handleChange('area_corpo', e.target.value)}
-          />
+          <div>
+            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Área do corpo</p>
+            <div className="flex flex-col gap-3">
+              {BODY_AREA_GROUPS.map(({ label, areas }) => (
+                <div key={label}>
+                  <p className="text-xs text-muted mb-1.5">{label}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {areas.map((area) => (
+                      <Chip
+                        key={area}
+                        active={selectedAreas.includes(area)}
+                        onClick={() =>
+                          setSelectedAreas((prev) =>
+                            prev.includes(area) ? prev.filter((a) => a !== area) : [...prev, area]
+                          )
+                        }
+                      >
+                        {area}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Billing type + totals */}
