@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2,
-  CalendarDays, Receipt, Banknote
+  CalendarDays, Banknote
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
@@ -65,7 +65,6 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([])
   const [birthdays, setBirthdays] = useState([])
   const [upcomingSessions, setUpcomingSessions] = useState([])
-  const [upcomingExpenses, setUpcomingExpenses] = useState([])
 
   useEffect(() => {
     loadDashboard()
@@ -147,13 +146,6 @@ export default function Dashboard() {
         .slice(0, 5)
       setUpcomingSessions(upcoming)
 
-      // Open expenses with a due date, soonest first (overdue included)
-      const upcomingExp = openExpenses
-        .filter((e) => e.data_vencimento)
-        .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento))
-        .slice(0, 5)
-      setUpcomingExpenses(upcomingExp)
-
       // Build chart: last 6 months
       const chartMonths = Array.from({ length: 6 }, (_, i) => {
         const d = subMonths(now, 5 - i)
@@ -205,7 +197,6 @@ export default function Dashboard() {
 
   const totalPendente = kpis.pendentes.reduce((s, p) => s + p.total, 0)
   const aPagar = totalPendente + kpis.despesasAbertas
-  const todayStr = new Date().toISOString().split('T')[0]
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
@@ -300,44 +291,6 @@ export default function Dashboard() {
                 <span className="text-xs text-muted flex-shrink-0 ml-2">{formatDate(s.data_sessao)}</span>
               </Card>
             ))}
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming / overdue expenses */}
-      <div className="px-4 mb-4">
-        <p className="text-xs text-muted uppercase tracking-wide mb-2">Despesas a vencer</p>
-        {upcomingExpenses.length === 0 ? (
-          <Card className="p-4">
-            <p className="text-sm text-muted">Nenhuma despesa em aberto</p>
-          </Card>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {upcomingExpenses.map((e) => {
-              const overdue = e.data_vencimento < todayStr
-              return (
-                <Card
-                  key={e.id}
-                  className="p-3 flex items-center justify-between"
-                  onClick={() => navigate('/despesas')}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`p-1.5 rounded-lg flex-shrink-0 ${overdue ? 'bg-red-500/10' : 'bg-[#2A2A2A]'}`}>
-                      <Receipt size={16} className={overdue ? 'text-red-400' : 'text-muted'} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{e.descricao}</p>
-                      <p className={`text-xs ${overdue ? 'text-red-400' : 'text-muted'}`}>
-                        {overdue ? 'Vencida em' : 'Vence em'} {formatDate(e.data_vencimento)}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold text-white flex-shrink-0 ml-2">
-                    {formatCurrency(e.valor)}
-                  </span>
-                </Card>
-              )
-            })}
           </div>
         )}
       </div>
