@@ -155,6 +155,13 @@ export default function SessionForm() {
     }
   }
 
+  // Multi-select needles, stored as a comma-separated string
+  function toggleAgulha(a) {
+    const list = form.agulhas ? form.agulhas.split(', ').filter(Boolean) : []
+    const next = list.includes(a) ? list.filter((x) => x !== a) : [...list, a]
+    handleChange('agulhas', next.join(', '))
+  }
+
   // Picking a studio explicitly re-enables commission recalculation
   function handleStudioChange(studioId) {
     lockCommission.current = false
@@ -247,6 +254,7 @@ export default function SessionForm() {
   const selectedProject = projects.find((p) => p.id === form.project_id)
   const selectedStudio = studios.find((s) => s.id === form.studio_id)
   const presets = settings?.presets_agulhas || []
+  const agulhasList = form.agulhas ? form.agulhas.split(', ').filter(Boolean) : []
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
@@ -472,8 +480,8 @@ export default function SessionForm() {
                     {presets.map((p) => (
                       <Chip
                         key={p}
-                        active={form.agulhas === p}
-                        onClick={() => handleChange('agulhas', form.agulhas === p ? '' : p)}
+                        active={agulhasList.includes(p)}
+                        onClick={() => toggleAgulha(p)}
                         color="primary"
                       >
                         {p}
