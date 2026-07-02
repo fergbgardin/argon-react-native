@@ -277,14 +277,16 @@ export default function ProjectForm() {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input
-              label={form.tipo_cobranca === 'fechado' ? 'Valor total (R$)' : 'Valor estimado (R$)'}
-              type="number"
-              step="0.01"
-              placeholder="0,00"
-              value={form.valor_total}
-              onChange={(e) => handleChange('valor_total', e.target.value)}
-            />
+            {form.tipo_cobranca === 'fechado' && (
+              <Input
+                label="Valor total (R$)"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={form.valor_total}
+                onChange={(e) => handleChange('valor_total', e.target.value)}
+              />
+            )}
             <Input
               label="Sessões estimadas"
               type="number"
