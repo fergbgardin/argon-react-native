@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X } from 'lucide-react'
-import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi } from '../../lib/api'
+import { ChevronDown, ChevronUp, X, Camera } from 'lucide-react'
+import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi, storageApi } from '../../lib/api'
 import { calcComissao } from '../../lib/utils'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
@@ -54,6 +54,12 @@ export default function SessionForm() {
   const [comissaoPct, setComissaoPct] = useState('')
   const [errors, setErrors] = useState({})
 
+  // Anamnese photo
+  const [anamneseFile, setAnamneseFile] = useState(null)
+  const [anamnesePreview, setAnamnesePreview] = useState(null)
+  const [existingAnamnese, setExistingAnamnese] = useState(null)
+  const anamneseRef = useRef(null)
+
   // When editing a session that already has a commission, keep the value
   // frozen (snapshot) — don't recalc from the studio's current config rate.
   const lockCommission = useRef(false)
@@ -86,6 +92,7 @@ export default function SessionForm() {
         agulhas: s.agulhas || '',
         obs: s.obs || '',
       })
+      setExistingAnamnese(s.foto_anamnese_url || null)
       lockCommission.current = !!s.valor_comissao_estudio
       const pays = s.session_payments || []
       if (pays.length > 0) {
@@ -153,6 +160,13 @@ export default function SessionForm() {
       const val = getMaterialValue(size)
       setForm((f) => ({ ...f, custo_material: size, custo_material_valor: val }))
     }
+  }
+
+  function handleAnamneseSelect(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAnamneseFile(file)
+    setAnamnesePreview(URL.createObjectURL(file))
   }
 
   // Multi-select needles, stored as a comma-separated string
@@ -249,6 +263,16 @@ export default function SessionForm() {
         setLoading(false)
         return
       }
+    }
+
+    if (anamneseFile) {
+      const { url, error: upError } = await storageApi.uploadAnamnese(anamneseFile, sessionId)
+      if (upError || !url) {
+        setErrors({ submit: `Sessão salva, mas a foto falhou: ${upError?.message || 'verifique se o bucket "inkmanager" existe no Supabase Storage.'}` })
+        setLoading(false)
+        return
+      }
+      await sessionsApi.update(sessionId, { foto_anamnese_url: url })
     }
 
     navigate(isEditing ? `/sessoes/${id}` : '/sessoes')
@@ -504,6 +528,41 @@ export default function SessionForm() {
               )}
 
             </div>
+          )}
+        </Card>
+
+        {/* Anamnese photo */}
+        <Card className="p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted uppercase tracking-wide">Anamnese</p>
+            <button
+              type="button"
+              className="flex items-center gap-1 text-xs text-primary"
+              onClick={() => anamneseRef.current?.click()}
+            >
+              <Camera size={14} />
+              {anamnesePreview || existingAnamnese ? 'Trocar foto' : 'Adicionar foto'}
+            </button>
+            <input
+              ref={anamneseRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleAnamneseSelect}
+            />
+          </div>
+          {(anamnesePreview || existingAnamnese) ? (
+            <img
+              src={anamnesePreview || existingAnamnese}
+              alt="Anamnese"
+              className="w-full rounded-lg object-cover max-h-64"
+            />
+          ) : (
+            <p className="text-sm text-muted">Nenhuma foto adicionada</p>
+          )}
+          {anamneseFile && (
+            <p className="text-xs text-muted">A foto será enviada ao salvar a sessão.</p>
           )}
         </Card>
 

@@ -97,8 +97,11 @@ export default function SessionDetail() {
     if (!file) return
     setPhotoPreview(URL.createObjectURL(file))
     setUploadLoading(true)
-    const { url } = await storageApi.uploadAnamnese(file, id)
-    if (url) {
+    const { url, error } = await storageApi.uploadAnamnese(file, id)
+    if (error || !url) {
+      setPhotoPreview(null)
+      alert(`Não foi possível enviar a foto: ${error?.message || 'verifique se o bucket "inkmanager" existe no Supabase Storage (público).'}`)
+    } else {
       await sessionsApi.update(id, { foto_anamnese_url: url })
       await refetch()
       setPhotoPreview(null)
