@@ -282,7 +282,8 @@ export default function ProjectDetail() {
             <p className="text-xs text-muted uppercase tracking-wide">Sessões</p>
             <Button
               size="sm"
-              variant="ghost"
+              variant="secondary"
+              className="border border-primary/40 text-primary"
               onClick={() => navigate(`/sessoes/nova?project_id=${id}`)}
             >
               <Plus size={14} /> Nova sessão
