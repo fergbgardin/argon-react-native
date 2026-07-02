@@ -3,14 +3,18 @@ import { Plus, X, Building2, Receipt, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { settingsApi } from '../lib/api'
 import { supabase, isConfigured } from '../lib/supabase'
+import { useAuth, getProfile } from '../hooks/useAuth'
 import PageHeader from '../components/ui/PageHeader'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
+import Avatar from '../components/ui/Avatar'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 export default function Settings() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const profile = user ? getProfile(user) : null
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -67,6 +71,17 @@ export default function Settings() {
       </div>
 
       <div className="px-4 flex flex-col gap-4">
+        {/* User profile */}
+        {profile && (
+          <Card className="p-4 flex items-center gap-3">
+            <Avatar src={profile.avatar} initials={profile.initials} size={48} />
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white truncate">{profile.fullName}</p>
+              {profile.email && <p className="text-xs text-muted truncate">{profile.email}</p>}
+            </div>
+          </Card>
+        )}
+
         {/* Material costs */}
         <Card className="p-4 flex flex-col gap-4">
           <p className="text-xs text-muted uppercase tracking-wide">Custo de Material</p>

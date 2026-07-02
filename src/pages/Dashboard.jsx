@@ -11,9 +11,18 @@ import { ptBR } from 'date-fns/locale'
 import { sessionsApi, expensesApi, clientsApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
 import { formatCurrency, formatMonthYear } from '../lib/utils'
+import { useAuth, getProfile } from '../hooks/useAuth'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
+import Avatar from '../components/ui/Avatar'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+
+function greeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Bom dia'
+  if (h < 18) return 'Boa tarde'
+  return 'Boa noite'
+}
 
 function KpiCard({ label, value, sub, icon: Icon, iconColor = 'text-primary' }) {
   return (
@@ -44,6 +53,8 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const profile = user ? getProfile(user) : null
   const [loading, setLoading] = useState(true)
   const [kpis, setKpis] = useState({ faturamento: 0, lucro: 0, pendentes: [] })
   const [chartData, setChartData] = useState([])
@@ -158,11 +169,24 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div className="px-4 pt-8 pb-4">
-        <p className="text-xs text-muted uppercase tracking-widest mb-1">
-          {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+      <div className="px-4 pt-8 pb-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-muted uppercase tracking-widest mb-1">
+            {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+          </p>
+          {profile ? (
+            <h1 className="text-2xl font-bold text-white truncate">
+              {greeting()}, {profile.firstName}
+            </h1>
+          ) : (
+            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          )}
+        </div>
+        {profile && (
+          <button onClick={() => navigate('/config')} className="flex-shrink-0">
+            <Avatar src={profile.avatar} initials={profile.initials} size={44} />
+          </button>
+        )}
       </div>
 
       {/* KPIs */}
