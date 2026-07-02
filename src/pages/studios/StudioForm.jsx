@@ -1,15 +1,21 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
 import { studiosApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
-import Select from '../../components/ui/Select'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import Modal from '../../components/ui/Modal'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function StudioForm() {
   const navigate = useNavigate()
+  const { id } = useParams()
+  const isEditing = !!id
   const [loading, setLoading] = useState(false)
+  const [initLoading, setInitLoading] = useState(isEditing)
+  const [deleteModal, setDeleteModal] = useState(false)
   const [form, setForm] = useState({
     nome: '',
     local: '',
@@ -18,6 +24,22 @@ export default function StudioForm() {
     is_favorite: false,
   })
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (!isEditing) return
+    studiosApi.get(id).then(({ data }) => {
+      if (data) {
+        setForm({
+          nome: data.nome || '',
+          local: data.local || '',
+          tipo_cobranca: data.tipo_cobranca || 'porcentagem',
+          valor_padrao: data.valor_padrao ?? '',
+          is_favorite: !!data.is_favorite,
+        })
+      }
+      setInitLoading(false)
+    })
+  }, [id])
 
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -37,13 +59,16 @@ export default function StudioForm() {
     if (!validate()) return
     setLoading(true)
 
-    const { data: studio, error } = await studiosApi.create({
+    const payload = {
       nome: form.nome,
       local: form.local || null,
       tipo_cobranca: form.tipo_cobranca,
       valor_padrao: parseFloat(form.valor_padrao),
       is_favorite: form.is_favorite,
-    })
+    }
+    const { error } = isEditing
+      ? await studiosApi.update(id, payload)
+      : await studiosApi.create(payload)
 
     if (error) {
       setErrors({ submit: error.message })
@@ -53,9 +78,25 @@ export default function StudioForm() {
     navigate('/studios')
   }
 
+  async function handleDelete() {
+    await studiosApi.delete(id)
+    navigate('/studios')
+  }
+
+  if (initLoading) return <LoadingSpinner fullPage />
+
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <PageHeader title="Novo Estúdio" />
+      <PageHeader
+        title={isEditing ? 'Editar Estúdio' : 'Novo Estúdio'}
+        actions={
+          isEditing && (
+            <Button variant="ghost" size="icon" onClick={() => setDeleteModal(true)}>
+              <Trash2 size={18} className="text-red-400" />
+            </Button>
+          )
+        }
+      />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
@@ -138,9 +179,23 @@ export default function StudioForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          Salvar Estúdio
+          {isEditing ? 'Salvar alterações' : 'Salvar Estúdio'}
         </Button>
       </form>
+
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir estúdio">
+        <p className="text-sm text-muted mb-4">
+          Tem certeza? As sessões vinculadas a este estúdio ficarão sem estúdio, mas não serão excluídas.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" full onClick={() => setDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" full onClick={handleDelete}>
+            Excluir
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

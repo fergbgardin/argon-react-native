@@ -56,7 +56,7 @@ export default function App() {
           {/* Studios */}
           <Route path="/studios" element={<StudioList />} />
           <Route path="/studios/novo" element={<StudioForm />} />
-          <Route path="/studios/:id" element={<StudioList />} />
+          <Route path="/studios/:id/editar" element={<StudioForm />} />
           <Route path="/studios/:id/acerto" element={<StudioPayout />} />
 
           {/* Expenses */}

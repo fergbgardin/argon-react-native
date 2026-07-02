@@ -94,7 +94,7 @@ export default function StudioList() {
               <Card
                 key={studio.id}
                 className="p-4 flex items-center justify-between"
-                onClick={() => navigate(`/studios/${studio.id}`)}
+                onClick={() => navigate(`/studios/${studio.id}/editar`)}
               >
                 <div className="flex items-center gap-3">
                   {studio.is_favorite && (
