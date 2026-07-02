@@ -55,6 +55,7 @@ export default function SessionDetail() {
 
   const client = session.projects?.clients
   const project = session.projects
+  const isFechado = project?.tipo_cobranca === 'fechado'
   const studio = session.studios
   const payments = session.session_payments || []
   const totalPago = payments.reduce((s, p) => s + (p.valor || 0), 0)
@@ -195,12 +196,26 @@ export default function SessionDetail() {
           )}
         </Card>
 
-        {/* Financial info — shown when concluded or whenever a payment exists */}
-        {(!isAgendada || payments.length > 0) && (
+        {/* Financial info — shown when concluded, a payment exists, or a session value was set */}
+        {(!isAgendada || payments.length > 0 || session.valor_sessao > 0) && (
           <Card className="p-4 flex flex-col gap-3">
             <p className="text-xs text-muted uppercase tracking-wide">Financeiro</p>
 
-            {payments.length > 0 ? (
+            {isFechado ? (
+              <div className="flex flex-col gap-1">
+                {session.valor_sessao > 0 ? (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Valor desta sessão</span>
+                    <span className="text-white">{formatCurrency(session.valor_sessao)}</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted">Valor desta sessão não informado</p>
+                )}
+                <p className="text-xs text-muted mt-1">
+                  Pagamentos deste projeto fechado são gerenciados na tela do projeto.
+                </p>
+              </div>
+            ) : payments.length > 0 ? (
               <div className="flex flex-col gap-1">
                 {payments.map((p, i) => (
                   <div key={i} className="flex justify-between text-sm">

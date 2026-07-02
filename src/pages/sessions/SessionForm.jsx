@@ -94,6 +94,12 @@ export default function SessionForm() {
       })
       setExistingAnamnese(s.foto_anamnese_url || null)
       lockCommission.current = !!s.valor_comissao_estudio
+      if (s.valor_sessao != null) {
+        setSessionValorFechado(s.valor_sessao.toString())
+        if (s.valor_comissao_estudio && s.valor_sessao > 0) {
+          setComissaoPct(((s.valor_comissao_estudio / s.valor_sessao) * 100).toFixed(1).replace(/\.0$/, ''))
+        }
+      }
       const pays = s.session_payments || []
       if (pays.length > 0) {
         setPayForma(pays[0].forma)
@@ -240,6 +246,7 @@ export default function SessionForm() {
       data_sessao: form.data_sessao,
       custo_material: form.custo_material_valor ? parseFloat(form.custo_material_valor) : null,
       valor_comissao_estudio: form.valor_comissao_estudio ? parseFloat(form.valor_comissao_estudio) : null,
+      valor_sessao: sessionValorFechado ? parseFloat(sessionValorFechado) : null,
       agulhas: form.agulhas || null,
       obs: form.obs || null,
     }
