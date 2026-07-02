@@ -155,7 +155,6 @@ export default function SessionDetail() {
             <Row label="Cliente" value={client?.nome} />
             <Row label="Projeto" value={project?.nome} />
             <Row label="Estúdio" value={studio?.nome} />
-            {session.agulhas && <Row label="Agulhas" value={session.agulhas} />}
           </div>
 
           {client?.whatsapp && (
@@ -168,6 +167,28 @@ export default function SessionDetail() {
               <ExternalLink size={14} />
               WhatsApp: {client.whatsapp}
             </a>
+          )}
+        </Card>
+
+        {/* Technical details */}
+        <Card className="p-4 flex flex-col gap-2">
+          <p className="text-xs text-muted uppercase tracking-wide">Detalhes técnicos</p>
+          {session.agulhas ? (
+            <div>
+              <p className="text-xs text-muted mb-1.5">Agulhas</p>
+              <div className="flex flex-wrap gap-2">
+                {session.agulhas.split(', ').filter(Boolean).map((a) => (
+                  <span
+                    key={a}
+                    className="text-xs bg-[#2A2A2A] border border-[#333] rounded-full px-2.5 py-1 text-white"
+                  >
+                    {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">Nenhuma agulha registrada</p>
           )}
         </Card>
 
