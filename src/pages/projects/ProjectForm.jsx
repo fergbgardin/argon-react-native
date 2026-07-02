@@ -1,12 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
-import { projectsApi, clientsApi } from '../../lib/api'
+import { projectsApi, clientsApi, projectPaymentsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import Chip from '../../components/ui/Chip'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+
+const PAYMENT_METHODS = [
+  { key: 'pix', label: 'PIX' },
+  { key: 'credito', label: 'Crédito' },
+  { key: 'debito', label: 'Débito' },
+  { key: 'dinheiro', label: 'Dinheiro' },
+]
 
 export default function ProjectForm() {
   const navigate = useNavigate()
@@ -27,9 +35,16 @@ export default function ProjectForm() {
     status: 'ativo',
   })
   const [errors, setErrors] = useState({})
+
+  // Client search
   const [clientSearch, setClientSearch] = useState('')
   const [showClientList, setShowClientList] = useState(false)
   const clientSearchRef = useRef(null)
+
+  // Payment (only used when creating a fechado project)
+  const [payForma, setPayForma] = useState('pix')
+  const [payValor, setPayValor] = useState('')
+  const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0])
 
   const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
   const filteredClients = clients.filter((c) =>
@@ -90,16 +105,35 @@ export default function ProjectForm() {
       status: form.status,
     }
 
-    const { error } = isEditing
-      ? await projectsApi.update(id, data)
-      : await projectsApi.create(data)
+    if (isEditing) {
+      const { error } = await projectsApi.update(id, data)
+      if (error) {
+        setErrors({ submit: error.message })
+        setLoading(false)
+        return
+      }
+      navigate(`/projetos/${id}`)
+      return
+    }
 
+    const { data: project, error } = await projectsApi.create(data)
     if (error) {
       setErrors({ submit: error.message })
       setLoading(false)
       return
     }
-    navigate(isEditing ? `/projetos/${id}` : '/projetos')
+
+    // Register initial payment for fechado projects if value was entered
+    if (form.tipo_cobranca === 'fechado' && payValor && parseFloat(payValor) > 0) {
+      await projectPaymentsApi.create({
+        project_id: project.id,
+        forma: payForma,
+        valor: parseFloat(payValor),
+        data_pagamento: payDate,
+      })
+    }
+
+    navigate(`/projetos/${project.id}`)
   }
 
   if (initLoading) return <LoadingSpinner fullPage />
@@ -109,6 +143,7 @@ export default function ProjectForm() {
       <PageHeader title={isEditing ? 'Editar Projeto' : 'Novo Projeto'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
+        {/* Client + name + body area */}
         <Card className="p-4 flex flex-col gap-4">
           <div>
             <label className="text-xs font-medium text-muted uppercase tracking-wide block mb-1">
@@ -122,10 +157,7 @@ export default function ProjectForm() {
                 placeholder="Buscar cliente..."
                 value={showClientList || !selectedClient ? clientSearch : selectedClient.nome}
                 autoComplete="off"
-                onFocus={() => {
-                  setClientSearch('')
-                  setShowClientList(true)
-                }}
+                onFocus={() => { setClientSearch(''); setShowClientList(true) }}
                 onBlur={() => setTimeout(() => {
                   setShowClientList(false)
                   if (!form.client_id) setClientSearch('')
@@ -175,6 +207,7 @@ export default function ProjectForm() {
           />
         </Card>
 
+        {/* Billing type + totals */}
         <Card className="p-4 flex flex-col gap-4">
           <div>
             <p className="text-xs text-muted uppercase tracking-wide mb-2">Tipo de cobrança</p>
@@ -220,6 +253,41 @@ export default function ProjectForm() {
             />
           </div>
         </Card>
+
+        {/* Payment — only for new fechado projects */}
+        {!isEditing && form.tipo_cobranca === 'fechado' && (
+          <Card className="p-4 flex flex-col gap-3">
+            <p className="text-xs text-muted uppercase tracking-wide">Pagamento recebido</p>
+            <div className="flex gap-2 flex-wrap">
+              {PAYMENT_METHODS.map(({ key, label }) => (
+                <Chip
+                  key={key}
+                  active={payForma === key}
+                  onClick={() => setPayForma(key)}
+                >
+                  {label}
+                </Chip>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Valor (R$)"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={payValor}
+                onChange={(e) => setPayValor(e.target.value)}
+              />
+              <Input
+                label="Data"
+                type="date"
+                value={payDate}
+                onChange={(e) => setPayDate(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted">Deixe em branco se ainda não recebeu</p>
+          </Card>
+        )}
 
         {errors.submit && (
           <p className="text-sm text-red-400 text-center">{errors.submit}</p>
