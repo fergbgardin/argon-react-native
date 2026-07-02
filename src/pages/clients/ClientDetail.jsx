@@ -116,7 +116,7 @@ export default function ClientDetail() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => navigate('/projetos/novo')}
+              onClick={() => navigate(`/projetos/novo?client_id=${id}`)}
             >
               <Plus size={14} /> Novo projeto
             </Button>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { projectsApi, clientsApi, projectPaymentsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
@@ -26,6 +26,8 @@ const BODY_AREA_GROUPS = [
 export default function ProjectForm() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+  const preClientId = searchParams.get('client_id')
   const isEditing = !!id
 
   const [loading, setLoading] = useState(false)
@@ -33,7 +35,7 @@ export default function ProjectForm() {
   const [initLoading, setInitLoading] = useState(true)
 
   const [form, setForm] = useState({
-    client_id: '',
+    client_id: preClientId || '',
     nome: '',
     area_corpo: '',
     tipo_cobranca: 'por_sessao',
@@ -72,6 +74,10 @@ export default function ProjectForm() {
     Promise.all(promises).then(([clientsRes, projectRes]) => {
       const clientList = clientsRes.data || []
       setClients(clientList)
+      if (preClientId && !isEditing) {
+        const c = clientList.find((c) => c.id === preClientId)
+        if (c) setClientSearch(c.nome)
+      }
       if (projectRes?.data) {
         const p = projectRes.data
         setForm({
