@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import BottomNav from './components/ui/BottomNav'
 import Dashboard from './pages/Dashboard'
+import Login from './pages/Login'
 import SessionList from './pages/sessions/SessionList'
 import SessionForm from './pages/sessions/SessionForm'
 import SessionDetail from './pages/sessions/SessionDetail'
@@ -15,8 +16,18 @@ import StudioForm from './pages/studios/StudioForm'
 import StudioPayout from './pages/studios/StudioPayout'
 import Expenses from './pages/Expenses'
 import Settings from './pages/Settings'
+import LoadingSpinner from './components/ui/LoadingSpinner'
+import { useAuth } from './hooks/useAuth'
+import { isConfigured } from './lib/supabase'
 
 export default function App() {
+  const { session, loading } = useAuth()
+
+  if (loading) return <LoadingSpinner fullPage />
+
+  // Require login when Supabase is configured
+  if (isConfigured && !session) return <Login />
+
   return (
     <BrowserRouter>
       <div className="max-w-lg mx-auto relative min-h-screen bg-bg">
@@ -52,7 +63,7 @@ export default function App() {
           <Route path="/despesas" element={<Expenses />} />
           <Route path="/despesas/nova" element={<Expenses />} />
 
-          {/* Settings (includes studios & expenses nav) */}
+          {/* Settings */}
           <Route path="/config" element={<Settings />} />
 
           {/* Fallback */}

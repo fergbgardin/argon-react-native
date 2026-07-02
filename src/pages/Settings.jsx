@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Building2, Receipt } from 'lucide-react'
+import { Plus, X, Building2, Receipt, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { settingsApi } from '../lib/api'
+import { supabase, isConfigured } from '../lib/supabase'
 import PageHeader from '../components/ui/PageHeader'
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
@@ -158,10 +159,19 @@ export default function Settings() {
           onClick={handleSave}
           loading={saving}
           variant={saved ? 'secondary' : 'primary'}
-          className="mb-6"
         >
           {saved ? '✓ Salvo' : 'Salvar Configurações'}
         </Button>
+
+        {isConfigured && (
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="w-full flex items-center justify-center gap-2 text-sm text-muted hover:text-red-400 transition-colors py-3 mb-6"
+          >
+            <LogOut size={14} />
+            Sair da conta
+          </button>
+        )}
       </div>
     </div>
   )
