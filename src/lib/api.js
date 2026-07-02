@@ -74,8 +74,8 @@ export const sessionsApi = {
     : mockResponse(mock.sessions.filter(s => s.project_id === projectId)),
 
   listPendingPayout: () => isConfigured
-    ? supabase.from('sessions').select('*, projects(id, nome, clients(id, nome)), studios(id, nome, tipo_cobranca, valor_padrao), session_payments(*)').is('payout_id', null).gt('valor_comissao_estudio', 0)
-    : mockResponse(mock.sessions.filter(s => !s.payout_id && s.valor_comissao_estudio > 0)),
+    ? supabase.from('sessions').select('*, projects(id, nome, clients(id, nome)), studios(id, nome, tipo_cobranca, valor_padrao), session_payments(*)').is('payout_id', null).eq('status', 'concluida').gt('valor_comissao_estudio', 0)
+    : mockResponse(mock.sessions.filter(s => !s.payout_id && s.status === 'concluida' && s.valor_comissao_estudio > 0)),
 
   get: (id) => isConfigured
     ? supabase.from('sessions').select('*, projects(id, nome, tipo_cobranca, valor_total, clients(id, nome, alerta_saude)), studios(id, nome, tipo_cobranca, valor_padrao), session_payments(*)').eq('id', id).single()

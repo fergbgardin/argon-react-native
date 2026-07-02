@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus
+  TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2
 } from 'lucide-react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -105,8 +105,8 @@ export default function Dashboard() {
         .reduce((s, e) => s + (e.valor || 0), 0)
       const lucro = faturamento - custoMaterial - comissoes - despesas
 
-      // Group pending payouts by studio (any session that owes commission, regardless of status)
-      const pendingSessions = sessions.filter((s) => !s.payout_id && s.valor_comissao_estudio > 0)
+      // Group pending payouts by studio (only concluded sessions that owe commission)
+      const pendingSessions = concluded.filter((s) => !s.payout_id && s.valor_comissao_estudio > 0)
       const pendingByStudio = {}
       pendingSessions.forEach((s) => {
         const studioId = s.studio_id
@@ -215,15 +215,24 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Pending Payouts */}
-      {kpis.pendentes.length > 0 && (
-        <div className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-muted uppercase tracking-wide">
-              Comissões pendentes
-            </p>
+      {/* Pending Payouts — always shown as a reminder */}
+      <div className="px-4 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs text-muted uppercase tracking-wide">
+            Comissões pendentes
+          </p>
+          {kpis.pendentes.length > 0 && (
             <Badge variant="warning">{formatCurrency(totalPendente)}</Badge>
-          </div>
+          )}
+        </div>
+        {kpis.pendentes.length === 0 ? (
+          <Card className="p-4 flex items-center gap-3">
+            <div className="p-1.5 bg-green-500/10 rounded-lg">
+              <CheckCircle2 size={16} className="text-green-400" />
+            </div>
+            <p className="text-sm text-muted">Nenhuma comissão pendente</p>
+          </Card>
+        ) : (
           <div className="flex flex-col gap-2">
             {kpis.pendentes.map((p, i) => (
               <Card
@@ -249,8 +258,8 @@ export default function Dashboard() {
               </Card>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Birthdays */}
       {birthdays.length > 0 && (
