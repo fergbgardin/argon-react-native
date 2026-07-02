@@ -65,7 +65,7 @@ export default function ProjectDetail() {
 
   async function handleDelete() {
     await projectsApi.delete(id)
-    navigate(-1)
+    navigate('/projetos')
   }
 
   async function handleStatusChange(status) {

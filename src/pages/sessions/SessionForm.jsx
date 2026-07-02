@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi } from '../../lib/api'
 import { calcComissao } from '../../lib/utils'
 import PageHeader from '../../components/ui/PageHeader'
@@ -46,9 +46,12 @@ export default function SessionForm() {
     obs: '',
   })
 
-  const [payments, setPayments] = useState([])
-  const [activePayMethods, setActivePayMethods] = useState([])
-  const [payValues, setPayValues] = useState({})
+  const [payForma, setPayForma] = useState('pix')
+  const [payValor, setPayValor] = useState('')
+  const [pay2Enabled, setPay2Enabled] = useState(false)
+  const [pay2Forma, setPay2Forma] = useState('credito')
+  const [pay2Valor, setPay2Valor] = useState('')
+  const [sessionValorFechado, setSessionValorFechado] = useState('')
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
@@ -82,10 +85,13 @@ export default function SessionForm() {
       })
       const pays = s.session_payments || []
       if (pays.length > 0) {
-        setActivePayMethods(pays.map((p) => p.forma))
-        const vals = {}
-        pays.forEach((p) => { vals[p.forma] = p.valor.toString() })
-        setPayValues(vals)
+        setPayForma(pays[0].forma)
+        setPayValor(pays[0].valor.toString())
+        if (pays.length > 1) {
+          setPay2Enabled(true)
+          setPay2Forma(pays[1].forma)
+          setPay2Valor(pays[1].valor.toString())
+        }
       }
     } else {
       const fav = studioList.find((s) => s.is_favorite)
@@ -104,22 +110,18 @@ export default function SessionForm() {
     if (!form.studio_id || !form.project_id) return
     const studio = studios.find((s) => s.id === form.studio_id)
     if (!studio) return
-
     const project = projects.find((p) => p.id === form.project_id)
     if (!project) return
 
     let valorBase = 0
     if (project.tipo_cobranca === 'por_sessao') {
-      // Use total from payments for commission base
-      valorBase = activePayMethods.reduce((sum, m) => {
-        return sum + (parseFloat(payValues[m]) || 0)
-      }, 0)
+      valorBase = (parseFloat(payValor) || 0) + (pay2Enabled ? (parseFloat(pay2Valor) || 0) : 0)
+    } else {
+      valorBase = parseFloat(sessionValorFechado) || 0
     }
     const comissao = calcComissao(valorBase, studio)
-    if (project.tipo_cobranca === 'por_sessao') {
-      setForm((f) => ({ ...f, valor_comissao_estudio: comissao.toString() }))
-    }
-  }, [form.studio_id, form.project_id, payValues, activePayMethods])
+    setForm((f) => ({ ...f, valor_comissao_estudio: comissao.toString() }))
+  }, [form.studio_id, form.project_id, payValor, pay2Valor, pay2Enabled, sessionValorFechado])
 
   function getMaterialValue(size) {
     if (!settings) return 0
@@ -136,36 +138,15 @@ export default function SessionForm() {
     setForm((f) => ({ ...f, custo_material: size, custo_material_valor: val }))
   }
 
-  function togglePayMethod(method) {
-    setActivePayMethods((prev) => {
-      if (prev.includes(method)) return prev.filter((m) => m !== method)
-      return [...prev, method]
-    })
-  }
-
-  function totalPayments() {
-    return activePayMethods.reduce((sum, m) => sum + (parseFloat(payValues[m]) || 0), 0)
-  }
-
   function buildPayments() {
-    if (activePayMethods.length === 0) return []
-
-    if (activePayMethods.length === 1) {
-      // Get total from project or manual entry
-      const proj = projects.find((p) => p.id === form.project_id)
-      let valor = 0
-      if (proj?.tipo_cobranca === 'por_sessao') {
-        valor = parseFloat(payValues[activePayMethods[0]]) || 0
-      } else {
-        valor = parseFloat(payValues[activePayMethods[0]]) || 0
-      }
-      return [{ forma: activePayMethods[0], valor }]
+    const result = []
+    if (payValor && parseFloat(payValor) > 0) {
+      result.push({ forma: payForma, valor: parseFloat(payValor) })
     }
-
-    return activePayMethods.map((m) => ({
-      forma: m,
-      valor: parseFloat(payValues[m]) || 0,
-    }))
+    if (pay2Enabled && pay2Valor && parseFloat(pay2Valor) > 0) {
+      result.push({ forma: pay2Forma, valor: parseFloat(pay2Valor) })
+    }
+    return result
   }
 
   function validate() {
@@ -274,6 +255,74 @@ export default function SessionForm() {
           </div>
         </Card>
 
+        {/* Payment — always visible for por_sessao, optional */}
+        {selectedProject?.tipo_cobranca !== 'fechado' && (
+          <Card className="p-4 flex flex-col gap-3">
+            <p className="text-xs text-muted uppercase tracking-wide">Pagamento</p>
+
+            <div className="flex gap-2 flex-wrap">
+              {PAYMENT_METHODS.map(({ key, label }) => (
+                <Chip key={key} active={payForma === key} onClick={() => setPayForma(key)}>
+                  {label}
+                </Chip>
+              ))}
+            </div>
+            <Input
+              label="Valor (R$)"
+              type="number"
+              step="0.01"
+              placeholder="0,00"
+              value={payValor}
+              onChange={(e) => setPayValor(e.target.value)}
+            />
+
+            {pay2Enabled ? (
+              <div className="flex flex-col gap-3 pt-1 border-t border-[#2A2A2A]">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted uppercase tracking-wide">Segunda forma</span>
+                  <button
+                    type="button"
+                    onClick={() => { setPay2Enabled(false); setPay2Valor('') }}
+                    className="text-muted hover:text-red-400 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, label }) => (
+                    <Chip key={key} active={pay2Forma === key} onClick={() => setPay2Forma(key)}>
+                      {label}
+                    </Chip>
+                  ))}
+                </div>
+                <Input
+                  label="Valor (R$)"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={pay2Valor}
+                  onChange={(e) => setPay2Valor(e.target.value)}
+                />
+                {payValor && pay2Valor && (
+                  <p className="text-xs text-muted">
+                    Total: R$ {((parseFloat(payValor) || 0) + (parseFloat(pay2Valor) || 0)).toFixed(2)}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPay2Enabled(true)}
+                className="text-xs text-primary text-left hover:opacity-80 transition-opacity"
+              >
+                + Dividir em outra forma de pagamento
+              </button>
+            )}
+
+            <p className="text-xs text-muted">Deixe em branco se ainda não recebeu</p>
+          </Card>
+        )}
+
         {/* Financial — only when concluida */}
         {form.status === 'concluida' && (
           <>
@@ -310,44 +359,19 @@ export default function SessionForm() {
               )}
             </Card>
 
-            {/* Payments — hidden for fechado projects (payment managed at project level) */}
-            {selectedProject?.tipo_cobranca !== 'fechado' && (
-              <Card className="p-4 flex flex-col gap-3">
-                <p className="text-xs text-muted uppercase tracking-wide">Pagamento</p>
-                <div className="flex gap-2 flex-wrap">
-                  {PAYMENT_METHODS.map(({ key, label }) => (
-                    <Chip
-                      key={key}
-                      active={activePayMethods.includes(key)}
-                      onClick={() => togglePayMethod(key)}
-                    >
-                      {label}
-                    </Chip>
-                  ))}
-                </div>
-
-                {activePayMethods.length > 0 && (
-                  <div className="flex flex-col gap-2">
-                    {activePayMethods.map((m) => (
-                      <Input
-                        key={m}
-                        label={PAYMENT_METHODS.find((p) => p.key === m)?.label}
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        value={payValues[m] || ''}
-                        onChange={(e) =>
-                          setPayValues((prev) => ({ ...prev, [m]: e.target.value }))
-                        }
-                      />
-                    ))}
-                    {activePayMethods.length > 1 && (
-                      <p className="text-xs text-muted">
-                        Total: R$ {totalPayments().toFixed(2)}
-                      </p>
-                    )}
-                  </div>
-                )}
+            {/* For fechado: ask session value to calculate commission */}
+            {selectedProject?.tipo_cobranca === 'fechado' && (
+              <Card className="p-4 flex flex-col gap-2">
+                <p className="text-xs text-muted uppercase tracking-wide">Valor desta sessão</p>
+                <Input
+                  label="Valor (R$)"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={sessionValorFechado}
+                  onChange={(e) => setSessionValorFechado(e.target.value)}
+                  hint="Usado para calcular a comissão do estúdio"
+                />
               </Card>
             )}
 
