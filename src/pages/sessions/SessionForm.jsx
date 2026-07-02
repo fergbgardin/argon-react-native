@@ -324,11 +324,11 @@ export default function SessionForm() {
           </Card>
         )}
 
-        {/* Financial — only when concluida */}
-        {form.status === 'concluida' && (
-          <>
-            {/* Material cost */}
-            <Card className="p-4 flex flex-col gap-3">
+        {/* Financial — always visible so a completed session can be
+            registered in full, or a scheduled one pre-filled */}
+        <>
+          {/* Material cost */}
+          <Card className="p-4 flex flex-col gap-3">
               <p className="text-xs text-muted uppercase tracking-wide">Custo de Material</p>
               <Select
                 label="Tamanho"
@@ -402,8 +402,7 @@ export default function SessionForm() {
                 hint="Puxado do estúdio e travado nesta sessão — editável se necessário"
               />
             </Card>
-          </>
-        )}
+        </>
 
         {/* Technical details (collapsible) */}
         <Card className="overflow-hidden">
