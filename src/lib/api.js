@@ -172,12 +172,4 @@ export const storageApi = {
     const { data: urlData } = supabase.storage.from('inkmanager').getPublicUrl(path)
     return { url: urlData.publicUrl, error: null }
   },
-  uploadAudio: async (blob, sessionId) => {
-    if (!isConfigured) return { url: null, error: new Error('Supabase não configurado') }
-    const path = `audio/${sessionId}.webm`
-    const { data, error } = await supabase.storage.from('inkmanager').upload(path, blob, { upsert: true, contentType: 'audio/webm' })
-    if (error) return { url: null, error }
-    const { data: urlData } = supabase.storage.from('inkmanager').getPublicUrl(path)
-    return { url: urlData.publicUrl, error: null }
-  },
 }
