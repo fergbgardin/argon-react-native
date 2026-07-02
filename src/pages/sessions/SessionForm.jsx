@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp, X } from 'lucide-react'
 import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi } from '../../lib/api'
@@ -53,6 +53,10 @@ export default function SessionForm() {
   const [sessionValorFechado, setSessionValorFechado] = useState('')
   const [errors, setErrors] = useState({})
 
+  // When editing a session that already has a commission, keep the value
+  // frozen (snapshot) — don't recalc from the studio's current config rate.
+  const lockCommission = useRef(false)
+
   useEffect(() => {
     loadInit()
   }, [])
@@ -75,12 +79,13 @@ export default function SessionForm() {
         studio_id: s.studio_id || '',
         status: s.status || 'agendada',
         data_sessao: s.data_sessao || new Date().toISOString().split('T')[0],
-        custo_material: s.custo_material ? '_edit' : '',
+        custo_material: s.custo_material ? 'outro' : '',
         custo_material_valor: s.custo_material ?? '',
         valor_comissao_estudio: s.valor_comissao_estudio ?? '',
         agulhas: s.agulhas || '',
         obs: s.obs || '',
       })
+      lockCommission.current = !!s.valor_comissao_estudio
       const pays = s.session_payments || []
       if (pays.length > 0) {
         setPayForma(pays[0].forma)
@@ -105,6 +110,8 @@ export default function SessionForm() {
 
   // Recalculate commission when studio or payment changes
   useEffect(() => {
+    // Preserve the stored (snapshot) value when editing an existing session
+    if (lockCommission.current) return
     if (!form.studio_id || !form.project_id) return
     const studio = studios.find((s) => s.id === form.studio_id)
     if (!studio) return
@@ -132,8 +139,20 @@ export default function SessionForm() {
   }
 
   function handleMaterialSelect(size) {
-    const val = getMaterialValue(size)
-    setForm((f) => ({ ...f, custo_material: size, custo_material_valor: val }))
+    if (!size) {
+      setForm((f) => ({ ...f, custo_material: '', custo_material_valor: '' }))
+    } else if (size === 'outro') {
+      setForm((f) => ({ ...f, custo_material: 'outro', custo_material_valor: '' }))
+    } else {
+      const val = getMaterialValue(size)
+      setForm((f) => ({ ...f, custo_material: size, custo_material_valor: val }))
+    }
+  }
+
+  // Picking a studio explicitly re-enables commission recalculation
+  function handleStudioChange(studioId) {
+    lockCommission.current = false
+    handleChange('studio_id', studioId)
   }
 
   function buildPayments() {
@@ -150,7 +169,7 @@ export default function SessionForm() {
   function validate() {
     const errs = {}
     if (!form.project_id) errs.project_id = 'Selecione um projeto'
-    if (!form.studio_id) errs.studio_id = 'Selecione um estúdio'
+    if (form.status === 'concluida' && !form.studio_id) errs.studio_id = 'Selecione um estúdio'
     if (!form.data_sessao) errs.data_sessao = 'Informe a data'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -214,20 +233,6 @@ export default function SessionForm() {
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.clients?.nome} — {p.nome}
-              </option>
-            ))}
-          </Select>
-
-          <Select
-            label="Estúdio *"
-            value={form.studio_id}
-            onChange={(e) => handleChange('studio_id', e.target.value)}
-            error={errors.studio_id}
-          >
-            <option value="">Selecionar estúdio...</option>
-            {studios.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.nome} {s.is_favorite ? '★' : ''}
               </option>
             ))}
           </Select>
@@ -325,30 +330,23 @@ export default function SessionForm() {
             {/* Material cost */}
             <Card className="p-4 flex flex-col gap-3">
               <p className="text-xs text-muted uppercase tracking-wide">Custo de Material</p>
-              <div className="flex gap-2">
-                {['pequena', 'media', 'grande'].map((size) => (
-                  <button
-                    type="button"
-                    key={size}
-                    onClick={() => handleMaterialSelect(size)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      form.custo_material === size
-                        ? 'bg-primary/20 border-primary/50 text-primary'
-                        : 'bg-[#2A2A2A] border-[#333] text-muted'
-                    }`}
-                  >
-                    {size.charAt(0).toUpperCase() + size.slice(1)}
-                    <span className="block text-xs mt-0.5 opacity-70">
-                      R$ {getMaterialValue(size)}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <Select
+                label="Tamanho"
+                value={form.custo_material}
+                onChange={(e) => handleMaterialSelect(e.target.value)}
+              >
+                <option value="">Selecionar...</option>
+                <option value="pequena">Pequena — R$ {getMaterialValue('pequena')}</option>
+                <option value="media">Média — R$ {getMaterialValue('media')}</option>
+                <option value="grande">Grande — R$ {getMaterialValue('grande')}</option>
+                <option value="outro">Outro (valor específico)</option>
+              </Select>
               {form.custo_material && (
                 <Input
-                  label="Valor (editável)"
+                  label={form.custo_material === 'outro' ? 'Valor específico (R$)' : 'Valor (editável)'}
                   type="number"
                   step="0.01"
+                  placeholder="0,00"
                   value={form.custo_material_valor}
                   onChange={(e) => handleChange('custo_material_valor', e.target.value)}
                 />
@@ -371,25 +369,39 @@ export default function SessionForm() {
               </Card>
             )}
 
-            {/* Commission */}
-            {selectedStudio && (
-              <Card className="p-4 flex flex-col gap-2">
-                <p className="text-xs text-muted uppercase tracking-wide">Comissão Estúdio</p>
+            {/* Commission — studio dropdown drives the snapshot value */}
+            <Card className="p-4 flex flex-col gap-3">
+              <p className="text-xs text-muted uppercase tracking-wide">Comissão do Estúdio</p>
+              <Select
+                label="Estúdio *"
+                value={form.studio_id}
+                onChange={(e) => handleStudioChange(e.target.value)}
+                error={errors.studio_id}
+              >
+                <option value="">Selecionar estúdio...</option>
+                {studios.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nome} {s.is_favorite ? '★' : ''}
+                  </option>
+                ))}
+              </Select>
+              {selectedStudio && (
                 <p className="text-xs text-muted">
-                  {selectedStudio.nome} —{' '}
-                  {selectedStudio.tipo_cobranca === 'porcentagem'
+                  Taxa: {selectedStudio.tipo_cobranca === 'porcentagem'
                     ? `${selectedStudio.valor_padrao}%`
                     : `R$ ${selectedStudio.valor_padrao} fixo`}
                 </p>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={form.valor_comissao_estudio}
-                  onChange={(e) => handleChange('valor_comissao_estudio', e.target.value)}
-                  hint="Calculado automaticamente — editável se necessário"
-                />
-              </Card>
-            )}
+              )}
+              <Input
+                label="Valor da comissão (R$)"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={form.valor_comissao_estudio}
+                onChange={(e) => handleChange('valor_comissao_estudio', e.target.value)}
+                hint="Puxado do estúdio e travado nesta sessão — editável se necessário"
+              />
+            </Card>
           </>
         )}
 
