@@ -319,13 +319,25 @@ export default function ProjectDetail() {
 
         {/* Status change */}
         {project.status === 'ativo' && (
-          <div className="flex gap-2 pb-6">
-            <Button variant="outline" full onClick={() => handleStatusChange('pausado')}>
-              Pausar
-            </Button>
-            <Button variant="secondary" full onClick={() => handleStatusChange('concluido')}>
-              Concluir
-            </Button>
+          <div className="pb-6">
+            <div className="flex gap-2">
+              <Button variant="outline" full onClick={() => handleStatusChange('pausado')}>
+                Pausar
+              </Button>
+              <Button
+                variant="secondary"
+                full
+                disabled={(sessions || []).length === 0}
+                onClick={() => handleStatusChange('concluido')}
+              >
+                Concluir
+              </Button>
+            </div>
+            {(sessions || []).length === 0 && (
+              <p className="text-xs text-muted mt-2 text-center">
+                Adicione ao menos uma sessão para concluir o projeto.
+              </p>
+            )}
           </div>
         )}
       </div>
