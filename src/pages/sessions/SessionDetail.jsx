@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Edit, Trash2, AlertTriangle, Camera, ExternalLink, CheckCircle2, Clock,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Mic, Square
 } from 'lucide-react'
 import { sessionsApi, sessionPaymentsApi, storageApi } from '../../lib/api'
 import { formatDate, formatCurrency, whatsappLink } from '../../lib/utils'
@@ -31,6 +31,7 @@ export default function SessionDetail() {
   const [completing, setCompleting] = useState(false)
   const [deleteModal, setDeleteModal] = useState(false)
   const [uploadLoading, setUploadLoading] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState(null)
   const [techExpanded, setTechExpanded] = useState(false)
 
   // Complete session form
@@ -40,9 +41,23 @@ export default function SessionDetail() {
   const [materialValue, setMaterialValue] = useState('')
   const [comissao, setComissao] = useState('')
   const [agulhas, setAgulhas] = useState('')
-  const [pigmentos, setPigmentos] = useState('')
   const [obs, setObs] = useState('')
   const fileRef = useRef()
+
+  // Audio recording
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [localAudioUrl, setLocalAudioUrl] = useState(null)
+  const [audioBlob, setAudioBlob] = useState(null)
+  const [uploadingAudio, setUploadingAudio] = useState(false)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
+  const timerRef = useRef(null)
+
+  useEffect(() => () => {
+    clearInterval(timerRef.current)
+    if (localAudioUrl) URL.revokeObjectURL(localAudioUrl)
+  }, [])
 
   if (loading) return <LoadingSpinner fullPage />
   if (!loading && !session) return (
@@ -82,7 +97,6 @@ export default function SessionDetail() {
         custo_material: materialValue ? parseFloat(materialValue) : null,
         valor_comissao_estudio: comissao ? parseFloat(comissao) : null,
         agulhas: agulhas || null,
-        pigmentos: pigmentos || null,
         obs: obs || null,
       }),
       pays.length > 0 ? sessionPaymentsApi.upsertForSession(id, pays) : Promise.resolve(),
@@ -95,13 +109,60 @@ export default function SessionDetail() {
   async function handlePhotoUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    setPhotoPreview(URL.createObjectURL(file))
     setUploadLoading(true)
     const { url } = await storageApi.uploadAnamnese(file, id)
     if (url) {
       await sessionsApi.update(id, { foto_anamnese_url: url })
       await refetch()
+      setPhotoPreview(null)
     }
     setUploadLoading(false)
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioChunksRef.current = []
+      const mr = new MediaRecorder(stream)
+      mediaRecorderRef.current = mr
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setAudioBlob(blob)
+        setLocalAudioUrl(URL.createObjectURL(blob))
+        stream.getTracks().forEach((t) => t.stop())
+      }
+      mr.start()
+      setIsRecording(true)
+      setRecordingSeconds(0)
+      timerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000)
+    } catch {
+      alert('Não foi possível acessar o microfone.')
+    }
+  }
+
+  function stopRecording() {
+    clearInterval(timerRef.current)
+    mediaRecorderRef.current?.stop()
+    setIsRecording(false)
+  }
+
+  async function saveAudio() {
+    if (!audioBlob) return
+    setUploadingAudio(true)
+    const { url } = await storageApi.uploadAudio(audioBlob, id)
+    if (url) {
+      await sessionsApi.update(id, { audio_tecnico_url: url })
+      await refetch()
+      setLocalAudioUrl(null)
+      setAudioBlob(null)
+    }
+    setUploadingAudio(false)
+  }
+
+  function fmtSeconds(s) {
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
   }
 
   const isAgendada = session.status === 'agendada'
@@ -153,7 +214,6 @@ export default function SessionDetail() {
             <Row label="Projeto" value={project?.nome} />
             <Row label="Estúdio" value={studio?.nome} />
             {session.agulhas && <Row label="Agulhas" value={session.agulhas} />}
-            {session.pigmentos && <Row label="Pigmentos" value={session.pigmentos} />}
           </div>
 
           {client?.whatsapp && (
@@ -241,14 +301,53 @@ export default function SessionDetail() {
             />
           </div>
 
-          {session.foto_anamnese_url ? (
+          {(photoPreview || session.foto_anamnese_url) ? (
             <img
-              src={session.foto_anamnese_url}
+              src={photoPreview || session.foto_anamnese_url}
               alt="Anamnese"
               className="w-full rounded-lg object-cover max-h-64"
             />
           ) : (
             <p className="text-sm text-muted">Nenhuma foto adicionada</p>
+          )}
+        </Card>
+
+        {/* Audio técnico */}
+        <Card className="p-4">
+          <p className="text-xs text-muted uppercase tracking-wide mb-3">Áudio técnico</p>
+
+          {session.audio_tecnico_url && !localAudioUrl && (
+            <audio controls className="w-full mb-3 rounded" src={session.audio_tecnico_url} />
+          )}
+
+          {localAudioUrl && (
+            <div className="flex flex-col gap-2 mb-3">
+              <audio controls className="w-full rounded" src={localAudioUrl} />
+              <Button full variant="secondary" loading={uploadingAudio} onClick={saveAudio}>
+                Salvar áudio
+              </Button>
+            </div>
+          )}
+
+          {isRecording ? (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="flex items-center gap-2 text-red-400 text-sm"
+            >
+              <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+              Gravando {fmtSeconds(recordingSeconds)} — Parar
+              <Square size={14} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startRecording}
+              className="flex items-center gap-2 text-primary text-sm hover:opacity-80 transition-opacity"
+            >
+              <Mic size={14} />
+              {session.audio_tecnico_url || localAudioUrl ? 'Gravar novo áudio' : 'Gravar áudio técnico'}
+            </button>
           )}
         </Card>
 

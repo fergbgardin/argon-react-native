@@ -15,25 +15,24 @@ export default function Settings() {
   const [saved, setSaved] = useState(false)
 
   const [form, setForm] = useState({
+    id: null,
     custo_material_pequena: 30,
     custo_material_media: 60,
     custo_material_grande: 100,
     presets_agulhas: [],
-    presets_pigmentos: [],
   })
 
   const [newAgulha, setNewAgulha] = useState('')
-  const [newPigmento, setNewPigmento] = useState('')
 
   useEffect(() => {
     settingsApi.get().then(({ data }) => {
       if (data) {
         setForm({
+          id: data.id,
           custo_material_pequena: data.custo_material_pequena ?? 30,
           custo_material_media: data.custo_material_media ?? 60,
           custo_material_grande: data.custo_material_grande ?? 100,
           presets_agulhas: data.presets_agulhas || [],
-          presets_pigmentos: data.presets_pigmentos || [],
         })
       }
       setLoading(false)
@@ -48,16 +47,6 @@ export default function Settings() {
 
   function removeAgulha(idx) {
     setForm((f) => ({ ...f, presets_agulhas: f.presets_agulhas.filter((_, i) => i !== idx) }))
-  }
-
-  function addPigmento() {
-    if (!newPigmento.trim()) return
-    setForm((f) => ({ ...f, presets_pigmentos: [...f.presets_pigmentos, newPigmento.trim()] }))
-    setNewPigmento('')
-  }
-
-  function removePigmento(idx) {
-    setForm((f) => ({ ...f, presets_pigmentos: f.presets_pigmentos.filter((_, i) => i !== idx) }))
   }
 
   async function handleSave() {
@@ -141,41 +130,6 @@ export default function Settings() {
               className="flex-1 bg-[#2A2A2A] border border-[#333] rounded-lg px-3 py-2 text-white text-sm placeholder-[#555] outline-none focus:border-primary"
             />
             <Button size="icon" variant="secondary" type="button" onClick={addAgulha}>
-              <Plus size={16} />
-            </Button>
-          </div>
-        </Card>
-
-        {/* Pigment presets */}
-        <Card className="p-4 flex flex-col gap-3">
-          <p className="text-xs text-muted uppercase tracking-wide">Presets de Pigmentos</p>
-          <div className="flex flex-wrap gap-2">
-            {form.presets_pigmentos.map((pig, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-1 bg-[#2A2A2A] border border-[#333] rounded-full px-3 py-1"
-              >
-                <span className="text-sm text-white">{pig}</span>
-                <button
-                  type="button"
-                  onClick={() => removePigmento(i)}
-                  className="text-muted hover:text-red-400 transition-colors ml-1"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Ex: Intenze Black"
-              value={newPigmento}
-              onChange={(e) => setNewPigmento(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addPigmento())}
-              className="flex-1 bg-[#2A2A2A] border border-[#333] rounded-lg px-3 py-2 text-white text-sm placeholder-[#555] outline-none focus:border-primary"
-            />
-            <Button size="icon" variant="secondary" type="button" onClick={addPigmento}>
               <Plus size={16} />
             </Button>
           </div>

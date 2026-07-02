@@ -42,7 +42,6 @@ export default function SessionForm() {
     custo_material_valor: '',
     valor_comissao_estudio: '',
     agulhas: '',
-    pigmentos: '',
     obs: '',
   })
 
@@ -80,7 +79,6 @@ export default function SessionForm() {
         custo_material_valor: s.custo_material ?? '',
         valor_comissao_estudio: s.valor_comissao_estudio ?? '',
         agulhas: s.agulhas || '',
-        pigmentos: s.pigmentos || '',
         obs: s.obs || '',
       })
       const pays = s.session_payments || []
@@ -171,7 +169,6 @@ export default function SessionForm() {
       custo_material: form.custo_material_valor ? parseFloat(form.custo_material_valor) : null,
       valor_comissao_estudio: form.valor_comissao_estudio ? parseFloat(form.valor_comissao_estudio) : null,
       agulhas: form.agulhas || null,
-      pigmentos: form.pigmentos || null,
       obs: form.obs || null,
     }
 
@@ -199,7 +196,6 @@ export default function SessionForm() {
   const selectedProject = projects.find((p) => p.id === form.project_id)
   const selectedStudio = studios.find((s) => s.id === form.studio_id)
   const presets = settings?.presets_agulhas || []
-  const presetsPig = settings?.presets_pigmentos || []
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
@@ -439,30 +435,6 @@ export default function SessionForm() {
                 />
               )}
 
-              {presetsPig.length > 0 ? (
-                <div>
-                  <p className="text-xs text-muted uppercase tracking-wide mb-2">Pigmentos</p>
-                  <div className="flex flex-wrap gap-2">
-                    {presetsPig.map((p) => (
-                      <Chip
-                        key={p}
-                        active={form.pigmentos === p}
-                        onClick={() => handleChange('pigmentos', form.pigmentos === p ? '' : p)}
-                        color="primary"
-                      >
-                        {p}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Input
-                  label="Pigmentos"
-                  placeholder="Ex: Intenze Black, Dynamic Black"
-                  value={form.pigmentos}
-                  onChange={(e) => handleChange('pigmentos', e.target.value)}
-                />
-              )}
             </div>
           )}
         </Card>

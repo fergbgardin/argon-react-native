@@ -154,10 +154,10 @@ export const expensesApi = {
 // ── User Settings ─────────────────────────────────────────
 export const settingsApi = {
   get: () => isConfigured
-    ? supabase.from('user_settings').select('*').limit(1).single()
+    ? supabase.from('user_settings').select('*').order('created_at', { ascending: true }).limit(1).maybeSingle()
     : mockResponse({ ...mock.settings }),
   upsert: (data) => isConfigured
-    ? supabase.from('user_settings').upsert(data).select().single()
+    ? supabase.from('user_settings').upsert(data, { onConflict: 'id' }).select().single()
     : mockResponse(data),
 }
 
@@ -168,6 +168,14 @@ export const storageApi = {
     const ext = file.name.split('.').pop()
     const path = `anamnese/${sessionId}.${ext}`
     const { data, error } = await supabase.storage.from('inkmanager').upload(path, file, { upsert: true })
+    if (error) return { url: null, error }
+    const { data: urlData } = supabase.storage.from('inkmanager').getPublicUrl(path)
+    return { url: urlData.publicUrl, error: null }
+  },
+  uploadAudio: async (blob, sessionId) => {
+    if (!isConfigured) return { url: null, error: new Error('Supabase não configurado') }
+    const path = `audio/${sessionId}.webm`
+    const { data, error } = await supabase.storage.from('inkmanager').upload(path, blob, { upsert: true, contentType: 'audio/webm' })
     if (error) return { url: null, error }
     const { data: urlData } = supabase.storage.from('inkmanager').getPublicUrl(path)
     return { url: urlData.publicUrl, error: null }
