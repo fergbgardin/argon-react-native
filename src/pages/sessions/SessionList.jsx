@@ -27,6 +27,23 @@ export default function SessionList() {
     return s.status === filter
   })
 
+  // Build session number per project (chronological order = #1, #2, ...)
+  const sessionNumberMap = (() => {
+    const byProject = {}
+    ;(sessions || []).forEach((s) => {
+      if (!byProject[s.project_id]) byProject[s.project_id] = []
+      byProject[s.project_id].push(s)
+    })
+    const map = {}
+    Object.values(byProject).forEach((group) => {
+      group
+        .slice()
+        .sort((a, b) => a.data_sessao.localeCompare(b.data_sessao))
+        .forEach((s, i) => { map[s.id] = i + 1 })
+    })
+    return map
+  })()
+
   function sessionTotal(s) {
     return (s.session_payments || []).reduce((sum, p) => sum + (p.valor || 0), 0)
   }
@@ -97,6 +114,11 @@ export default function SessionList() {
                     </p>
                     <p className="text-sm text-muted truncate">
                       {session.projects?.nome || '—'}
+                      {sessionNumberMap[session.id] && (
+                        <span className="ml-1.5 text-xs text-primary/70">
+                          · Sessão {sessionNumberMap[session.id]}
+                        </span>
+                      )}
                     </p>
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-muted flex items-center gap-1">
