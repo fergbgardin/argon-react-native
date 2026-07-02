@@ -51,6 +51,7 @@ export default function SessionForm() {
   const [pay2Forma, setPay2Forma] = useState('credito')
   const [pay2Valor, setPay2Valor] = useState('')
   const [sessionValorFechado, setSessionValorFechado] = useState('')
+  const [comissaoPct, setComissaoPct] = useState('')
   const [errors, setErrors] = useState({})
 
   // When editing a session that already has a commission, keep the value
@@ -95,6 +96,10 @@ export default function SessionForm() {
           setPay2Forma(pays[1].forma)
           setPay2Valor(pays[1].valor.toString())
         }
+        const base = pays.reduce((sum, p) => sum + (p.valor || 0), 0)
+        if (base > 0 && s.valor_comissao_estudio) {
+          setComissaoPct(((s.valor_comissao_estudio / base) * 100).toFixed(1).replace(/\.0$/, ''))
+        }
       }
     } else {
       const fav = studioList.find((s) => s.is_favorite)
@@ -125,7 +130,8 @@ export default function SessionForm() {
       valorBase = parseFloat(sessionValorFechado) || 0
     }
     const comissao = calcComissao(valorBase, studio)
-    setForm((f) => ({ ...f, valor_comissao_estudio: comissao.toString() }))
+    setForm((f) => ({ ...f, valor_comissao_estudio: comissao ? comissao.toString() : '' }))
+    setComissaoPct(valorBase > 0 && comissao ? fmtPct((comissao / valorBase) * 100) : '')
   }, [form.studio_id, form.project_id, payValor, pay2Valor, pay2Enabled, sessionValorFechado])
 
   function getMaterialValue(size) {
@@ -153,6 +159,32 @@ export default function SessionForm() {
   function handleStudioChange(studioId) {
     lockCommission.current = false
     handleChange('studio_id', studioId)
+  }
+
+  // Base used to convert between R$ and % for the commission
+  function commissionBase() {
+    const proj = projects.find((p) => p.id === form.project_id)
+    if (proj?.tipo_cobranca === 'fechado') return parseFloat(sessionValorFechado) || 0
+    return (parseFloat(payValor) || 0) + (pay2Enabled ? parseFloat(pay2Valor) || 0 : 0)
+  }
+
+  const fmtPct = (n) => n.toFixed(1).replace(/\.0$/, '')
+
+  // Editing the R$ value updates the % (and stops auto-recalc overwriting it)
+  function handleComissaoValor(v) {
+    lockCommission.current = true
+    handleChange('valor_comissao_estudio', v)
+    const base = commissionBase()
+    setComissaoPct(base > 0 && v ? fmtPct((parseFloat(v) / base) * 100) : '')
+  }
+
+  // Editing the % updates the R$ value
+  function handleComissaoPct(p) {
+    lockCommission.current = true
+    setComissaoPct(p)
+    const base = commissionBase()
+    const val = base > 0 && p ? (base * parseFloat(p)) / 100 : 0
+    handleChange('valor_comissao_estudio', val ? val.toFixed(2) : '')
   }
 
   function buildPayments() {
@@ -392,15 +424,27 @@ export default function SessionForm() {
                     : `R$ ${selectedStudio.valor_padrao} fixo`}
                 </p>
               )}
-              <Input
-                label="Valor da comissão (R$)"
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-                value={form.valor_comissao_estudio}
-                onChange={(e) => handleChange('valor_comissao_estudio', e.target.value)}
-                hint="Puxado do estúdio e travado nesta sessão — editável se necessário"
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Valor (R$)"
+                  type="number"
+                  step="0.01"
+                  placeholder="0,00"
+                  value={form.valor_comissao_estudio}
+                  onChange={(e) => handleComissaoValor(e.target.value)}
+                />
+                <Input
+                  label="Percentual (%)"
+                  type="number"
+                  step="0.1"
+                  placeholder="0"
+                  value={comissaoPct}
+                  onChange={(e) => handleComissaoPct(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-muted">
+                Puxado do estúdio e travado nesta sessão — edite o valor ou o percentual.
+              </p>
             </Card>
         </>
 
