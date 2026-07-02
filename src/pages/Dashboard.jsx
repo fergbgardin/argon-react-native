@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2
+  TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2,
+  CalendarDays, Receipt, Banknote
 } from 'lucide-react'
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
-import { formatCurrency, formatMonthYear } from '../lib/utils'
+import { formatCurrency, formatDate } from '../lib/utils'
 import { useAuth, getProfile } from '../hooks/useAuth'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
@@ -44,9 +45,13 @@ function KpiCard({ label, value, sub, icon: Icon, iconColor = 'text-primary' }) 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-card border border-[#2A2A2A] rounded-lg px-3 py-2 text-sm">
+    <div className="bg-card border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs">
       <p className="text-muted mb-1">{label}</p>
-      <p className="text-white font-semibold">{formatCurrency(payload[0]?.value)}</p>
+      {payload.map((p) => (
+        <p key={p.dataKey} className="font-medium" style={{ color: p.color }}>
+          {p.name}: {formatCurrency(p.value)}
+        </p>
+      ))}
     </div>
   )
 }
@@ -56,9 +61,11 @@ export default function Dashboard() {
   const { user } = useAuth()
   const profile = user ? getProfile(user) : null
   const [loading, setLoading] = useState(true)
-  const [kpis, setKpis] = useState({ faturamento: 0, lucro: 0, pendentes: [] })
+  const [kpis, setKpis] = useState({ faturamento: 0, lucro: 0, pendentes: [], despesasAbertas: 0 })
   const [chartData, setChartData] = useState([])
   const [birthdays, setBirthdays] = useState([])
+  const [upcomingSessions, setUpcomingSessions] = useState([])
+  const [upcomingExpenses, setUpcomingExpenses] = useState([])
 
   useEffect(() => {
     loadDashboard()
@@ -80,6 +87,7 @@ export default function Dashboard() {
       const projectPayments = projPaysRes.data || []
 
       const now = new Date()
+      const today = now.toISOString().split('T')[0]
       const monthStart = startOfMonth(now).toISOString().split('T')[0]
       const monthEnd = endOfMonth(now).toISOString().split('T')[0]
 
@@ -121,11 +129,30 @@ export default function Dashboard() {
         pendingByStudio[studioId].count += 1
       })
 
+      // Open (unpaid) expenses
+      const openExpenses = expenses.filter((e) => !e.data_pagamento)
+      const despesasAbertas = openExpenses.reduce((s, e) => s + (e.valor || 0), 0)
+
       setKpis({
         faturamento,
         lucro,
         pendentes: Object.values(pendingByStudio),
+        despesasAbertas,
       })
+
+      // Upcoming scheduled sessions (agenda)
+      const upcoming = sessions
+        .filter((s) => s.status === 'agendada' && s.data_sessao >= today)
+        .sort((a, b) => a.data_sessao.localeCompare(b.data_sessao))
+        .slice(0, 5)
+      setUpcomingSessions(upcoming)
+
+      // Open expenses with a due date, soonest first (overdue included)
+      const upcomingExp = openExpenses
+        .filter((e) => e.data_vencimento)
+        .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento))
+        .slice(0, 5)
+      setUpcomingExpenses(upcomingExp)
 
       // Build chart: last 6 months
       const chartMonths = Array.from({ length: 6 }, (_, i) => {
@@ -141,13 +168,22 @@ export default function Dashboard() {
         const mSessions = concluded.filter(
           (s) => s.data_sessao >= m.start && s.data_sessao <= m.end
         )
-        const valorSessoes = mSessions.reduce((sum, s) => {
+        const entradaSessoes = mSessions.reduce((sum, s) => {
           return sum + (s.session_payments || []).reduce((a, p) => a + (p.valor || 0), 0)
         }, 0)
-        const valorProjetos = projectPayments
+        const entradaProjetos = projectPayments
           .filter((p) => p.data_pagamento >= m.start && p.data_pagamento <= m.end)
           .reduce((sum, p) => sum + (p.valor || 0), 0)
-        return { name: m.label, valor: valorSessoes + valorProjetos }
+        const mMaterial = mSessions.reduce((s, sess) => s + (sess.custo_material || 0), 0)
+        const mComissoes = mSessions.reduce((s, sess) => s + (sess.valor_comissao_estudio || 0), 0)
+        const mDespesas = expenses
+          .filter((e) => e.data_pagamento && e.data_pagamento >= m.start && e.data_pagamento <= m.end)
+          .reduce((s, e) => s + (e.valor || 0), 0)
+        return {
+          name: m.label,
+          entradas: entradaSessoes + entradaProjetos,
+          saidas: mMaterial + mComissoes + mDespesas,
+        }
       })
       setChartData(chart)
 
@@ -168,6 +204,8 @@ export default function Dashboard() {
   if (loading) return <LoadingSpinner fullPage />
 
   const totalPendente = kpis.pendentes.reduce((s, p) => s + p.total, 0)
+  const aPagar = totalPendente + kpis.despesasAbertas
+  const todayStr = new Date().toISOString().split('T')[0]
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
@@ -213,6 +251,95 @@ export default function Dashboard() {
           icon={Wallet}
           iconColor={kpis.lucro >= 0 ? 'text-primary' : 'text-red-400'}
         />
+      </div>
+
+      {/* A pagar */}
+      <div className="px-4 mb-4">
+        <Card className="p-4 flex items-center justify-between">
+          <div className="min-w-0">
+            <p className="text-xs text-muted uppercase tracking-wide mb-1">A pagar</p>
+            <p className="text-xl font-bold text-red-400">{formatCurrency(aPagar)}</p>
+            <p className="text-xs text-muted mt-0.5">
+              {formatCurrency(kpis.despesasAbertas)} em despesas · {formatCurrency(totalPendente)} em comissões
+            </p>
+          </div>
+          <div className="p-2 rounded-lg bg-[#2A2A2A] text-red-400 flex-shrink-0">
+            <Banknote size={18} />
+          </div>
+        </Card>
+      </div>
+
+      {/* Upcoming sessions (agenda) */}
+      <div className="px-4 mb-4">
+        <p className="text-xs text-muted uppercase tracking-wide mb-2">Próximas sessões</p>
+        {upcomingSessions.length === 0 ? (
+          <Card className="p-4">
+            <p className="text-sm text-muted">Nenhuma sessão agendada</p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {upcomingSessions.map((s) => (
+              <Card
+                key={s.id}
+                className="p-3 flex items-center justify-between"
+                onClick={() => navigate(`/sessoes/${s.id}`)}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-1.5 bg-primary/10 rounded-lg flex-shrink-0">
+                    <CalendarDays size={16} className="text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {s.projects?.clients?.nome || '—'}
+                    </p>
+                    <p className="text-xs text-muted truncate">
+                      {s.projects?.nome || ''}{s.studios?.nome ? ` · ${s.studios.nome}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs text-muted flex-shrink-0 ml-2">{formatDate(s.data_sessao)}</span>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Upcoming / overdue expenses */}
+      <div className="px-4 mb-4">
+        <p className="text-xs text-muted uppercase tracking-wide mb-2">Despesas a vencer</p>
+        {upcomingExpenses.length === 0 ? (
+          <Card className="p-4">
+            <p className="text-sm text-muted">Nenhuma despesa em aberto</p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {upcomingExpenses.map((e) => {
+              const overdue = e.data_vencimento < todayStr
+              return (
+                <Card
+                  key={e.id}
+                  className="p-3 flex items-center justify-between"
+                  onClick={() => navigate('/despesas')}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`p-1.5 rounded-lg flex-shrink-0 ${overdue ? 'bg-red-500/10' : 'bg-[#2A2A2A]'}`}>
+                      <Receipt size={16} className={overdue ? 'text-red-400' : 'text-muted'} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{e.descricao}</p>
+                      <p className={`text-xs ${overdue ? 'text-red-400' : 'text-muted'}`}>
+                        {overdue ? 'Vencida em' : 'Vence em'} {formatDate(e.data_vencimento)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-white flex-shrink-0 ml-2">
+                    {formatCurrency(e.valor)}
+                  </span>
+                </Card>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Pending Payouts — always shown as a reminder */}
@@ -285,14 +412,14 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Revenue Chart */}
+      {/* Entradas vs Saídas Chart */}
       <div className="px-4 mb-4">
         <p className="text-xs text-muted uppercase tracking-wide mb-3">
-          Faturamento — últimos 6 meses
+          Entradas vs Saídas — últimos 6 meses
         </p>
         <Card className="p-4">
-          <ResponsiveContainer width="100%" height={160}>
-            <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
               <XAxis
                 dataKey="name"
                 tick={{ fill: '#71717A', fontSize: 10 }}
@@ -300,16 +427,15 @@ export default function Dashboard() {
                 tickLine={false}
               />
               <YAxis hide />
-              <Tooltip content={<CustomTooltip />} />
-              <Line
-                type="monotone"
-                dataKey="valor"
-                stroke="#C084FC"
-                strokeWidth={2}
-                dot={{ fill: '#C084FC', r: 3 }}
-                activeDot={{ r: 5 }}
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff08' }} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: 11, color: '#71717A' }}
               />
-            </LineChart>
+              <Bar dataKey="entradas" name="Entradas" fill="#34D399" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="saidas" name="Saídas" fill="#F87171" radius={[3, 3, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </Card>
       </div>
