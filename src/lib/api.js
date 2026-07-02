@@ -110,6 +110,9 @@ export const projectPaymentsApi = {
   list: (projectId) => isConfigured
     ? supabase.from('project_payments').select('*').eq('project_id', projectId).order('data_pagamento', { ascending: false })
     : mockResponse([]),
+  listAll: () => isConfigured
+    ? supabase.from('project_payments').select('*')
+    : mockResponse([]),
   create: (data) => isConfigured
     ? supabase.from('project_payments').insert(data).select().single()
     : mockResponse({ ...data, id: crypto.randomUUID() }),

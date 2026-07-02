@@ -8,7 +8,7 @@ import {
 } from 'recharts'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { sessionsApi, expensesApi, clientsApi } from '../lib/api'
+import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
 import { formatCurrency, formatMonthYear } from '../lib/utils'
 import { useAuth, getProfile } from '../hooks/useAuth'
@@ -67,15 +67,17 @@ export default function Dashboard() {
   async function loadDashboard() {
     setLoading(true)
     try {
-      const [sessionsRes, expensesRes, clientsRes] = await Promise.all([
+      const [sessionsRes, expensesRes, clientsRes, projPaysRes] = await Promise.all([
         sessionsApi.list(),
         expensesApi.list(),
         clientsApi.list(),
+        projectPaymentsApi.listAll(),
       ])
 
       const sessions = sessionsRes.data || []
       const expenses = expensesRes.data || []
       const clients = clientsRes.data || []
+      const projectPayments = projPaysRes.data || []
 
       const now = new Date()
       const monthStart = startOfMonth(now).toISOString().split('T')[0]
@@ -86,10 +88,15 @@ export default function Dashboard() {
         (s) => s.data_sessao >= monthStart && s.data_sessao <= monthEnd
       )
 
-      const faturamento = monthSessions.reduce((sum, s) => {
+      // Revenue: session payments (por_sessao) + project payments (fechado)
+      const receitaSessoes = monthSessions.reduce((sum, s) => {
         const pays = (s.session_payments || []).reduce((a, p) => a + (p.valor || 0), 0)
         return sum + pays
       }, 0)
+      const receitaProjetos = projectPayments
+        .filter((p) => p.data_pagamento >= monthStart && p.data_pagamento <= monthEnd)
+        .reduce((sum, p) => sum + (p.valor || 0), 0)
+      const faturamento = receitaSessoes + receitaProjetos
 
       const custoMaterial = monthSessions.reduce((s, sess) => s + (sess.custo_material || 0), 0)
       const comissoes = monthSessions.reduce((s, sess) => s + (sess.valor_comissao_estudio || 0), 0)
@@ -98,8 +105,8 @@ export default function Dashboard() {
         .reduce((s, e) => s + (e.valor || 0), 0)
       const lucro = faturamento - custoMaterial - comissoes - despesas
 
-      // Group pending payouts by studio
-      const pendingSessions = concluded.filter((s) => !s.payout_id)
+      // Group pending payouts by studio (only sessions that actually owe commission)
+      const pendingSessions = concluded.filter((s) => !s.payout_id && s.valor_comissao_estudio > 0)
       const pendingByStudio = {}
       pendingSessions.forEach((s) => {
         const studioId = s.studio_id
@@ -134,10 +141,13 @@ export default function Dashboard() {
         const mSessions = concluded.filter(
           (s) => s.data_sessao >= m.start && s.data_sessao <= m.end
         )
-        const valor = mSessions.reduce((sum, s) => {
+        const valorSessoes = mSessions.reduce((sum, s) => {
           return sum + (s.session_payments || []).reduce((a, p) => a + (p.valor || 0), 0)
         }, 0)
-        return { name: m.label, valor }
+        const valorProjetos = projectPayments
+          .filter((p) => p.data_pagamento >= m.start && p.data_pagamento <= m.end)
+          .reduce((sum, p) => sum + (p.valor || 0), 0)
+        return { name: m.label, valor: valorSessoes + valorProjetos }
       })
       setChartData(chart)
 

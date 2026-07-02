@@ -17,12 +17,13 @@ export default function StudioList() {
 
   if (sLoading || sessLoading) return <LoadingSpinner fullPage />
 
-  // Aggregate pending by studio
+  // Aggregate pending by studio (only sessions that actually owe commission)
   const pendingByStudio = {}
   ;(sessions || []).forEach((s) => {
+    if (!(s.valor_comissao_estudio > 0)) return
     const sid = s.studio_id
     if (!pendingByStudio[sid]) pendingByStudio[sid] = { total: 0, count: 0 }
-    pendingByStudio[sid].total += s.valor_comissao_estudio || 0
+    pendingByStudio[sid].total += s.valor_comissao_estudio
     pendingByStudio[sid].count += 1
   })
 

@@ -24,7 +24,9 @@ export default function StudioPayout() {
 
   if (sLoading || sessLoading) return <LoadingSpinner fullPage />
 
-  const pendingSessions = (allSessions || []).filter((s) => s.studio_id === id)
+  const pendingSessions = (allSessions || []).filter(
+    (s) => s.studio_id === id && s.valor_comissao_estudio > 0
+  )
   const total = pendingSessions.reduce((s, sess) => s + (sess.valor_comissao_estudio || 0), 0)
 
   async function handlePayout() {
