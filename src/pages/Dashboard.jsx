@@ -105,8 +105,8 @@ export default function Dashboard() {
         .reduce((s, e) => s + (e.valor || 0), 0)
       const lucro = faturamento - custoMaterial - comissoes - despesas
 
-      // Group pending payouts by studio (only sessions that actually owe commission)
-      const pendingSessions = concluded.filter((s) => !s.payout_id && s.valor_comissao_estudio > 0)
+      // Group pending payouts by studio (any session that owes commission, regardless of status)
+      const pendingSessions = sessions.filter((s) => !s.payout_id && s.valor_comissao_estudio > 0)
       const pendingByStudio = {}
       pendingSessions.forEach((s) => {
         const studioId = s.studio_id

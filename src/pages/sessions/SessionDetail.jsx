@@ -256,20 +256,14 @@ export default function SessionDetail() {
 
             {/* Settle commission action */}
             {session.valor_comissao_estudio > 0 && !session.payout_id && session.studio_id && (
-              !isAgendada ? (
-                <Button
-                  full
-                  variant="secondary"
-                  className="border border-amber-500/40 text-amber-400 mt-1"
-                  onClick={() => navigate(`/studios/${session.studio_id}/acerto`)}
-                >
-                  Acertar comissão do estúdio
-                </Button>
-              ) : (
-                <p className="text-xs text-muted mt-1">
-                  A comissão poderá ser acertada quando a sessão for concluída.
-                </p>
-              )
+              <Button
+                full
+                variant="secondary"
+                className="border border-amber-500/40 text-amber-400 mt-1"
+                onClick={() => navigate(`/studios/${session.studio_id}/acerto`)}
+              >
+                Acertar comissão do estúdio
+              </Button>
             )}
           </Card>
         )}
