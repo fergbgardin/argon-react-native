@@ -10,7 +10,10 @@ export default function PageHeader({ title, subtitle, onBack, actions }) {
   }
 
   return (
-    <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+    <div
+      className="sticky top-0 z-30 glass-header flex items-center gap-3 px-4 pb-3"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+    >
       {(onBack !== false) && (
         <button
           onClick={handleBack}

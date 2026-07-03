@@ -15,13 +15,13 @@ export default function Modal({ open, onClose, title, children }) {
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
       onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-md" />
       <div
-        className="relative w-full max-w-lg bg-card rounded-t-2xl sm:rounded-2xl border border-[#2A2A2A] max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg glass-sheet rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#2A2A2A]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
             <h2 className="text-base font-semibold text-white">{title}</h2>
             <button onClick={onClose} className="p-1 text-muted hover:text-white transition-colors">
               <X size={18} />
