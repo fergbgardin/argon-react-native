@@ -48,6 +48,13 @@
     scrollbar-width: none;
   }
 
+  .text-gradient {
+    background: linear-gradient(120deg, #7c6cff, #c084fc 45%, #f0637e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   /* ---- Liquid glass (frosted chrome) ---- */
   .glass-nav {
     background: rgba(18, 18, 21, 0.72);

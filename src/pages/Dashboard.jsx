@@ -26,20 +26,17 @@ function greeting() {
   return 'Boa noite'
 }
 
-function KpiCard({ label, value, sub, icon: Icon, iconColor = 'text-primary' }) {
+function StatTile({ label, value, icon: Icon, iconColor = 'text-primary', valueColor = 'text-white' }) {
   return (
-    <Card className="p-4 flex-1 min-w-0">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-xs text-muted uppercase tracking-wide mb-1">{label}</p>
-          <p className="text-xl font-bold text-white truncate">{value}</p>
-          {sub && <p className="text-xs text-muted mt-0.5">{sub}</p>}
-        </div>
-        <div className={`p-2 rounded-lg bg-[#2A2A2A] ${iconColor} flex-shrink-0`}>
-          <Icon size={18} />
-        </div>
+    <div className="rounded-2xl bg-card border border-border p-4">
+      <div className="flex items-center justify-between mb-2.5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">{label}</p>
+        <Icon size={15} className={iconColor} />
       </div>
-    </Card>
+      <p className={`text-lg leading-none font-bold tracking-tight tabular-nums truncate ${valueColor}`}>
+        {value}
+      </p>
+    </div>
   )
 }
 
@@ -233,36 +230,45 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* KPIs */}
-      <div className="px-4 flex gap-3 mb-4">
-        <KpiCard
+      {/* Financial bento — hero result + supporting stats */}
+      <div className="px-4 grid grid-cols-2 gap-3 mb-5">
+        {/* Hero: monthly result */}
+        <div
+          className="col-span-2 relative overflow-hidden rounded-2xl border border-primary/25 p-5"
+          style={{ background: 'linear-gradient(135deg, rgba(124,108,255,0.16), rgba(240,99,126,0.06) 62%), #1a1a1f' }}
+        >
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+              Resultado · {format(new Date(), 'MMMM', { locale: ptBR })}
+            </p>
+            <Wallet size={16} className={kpis.lucro >= 0 ? 'text-primary' : 'text-red-400'} />
+          </div>
+          <p
+            className={`mt-3 text-[40px] leading-none font-extrabold tracking-tight tabular-nums ${
+              kpis.lucro >= 0 ? 'text-gradient' : 'text-red-400'
+            }`}
+          >
+            {formatCurrency(kpis.lucro)}
+          </p>
+          <p className="text-xs text-muted mt-2">Lucro líquido do mês</p>
+        </div>
+
+        {/* Faturamento */}
+        <StatTile
           label="Faturamento"
           value={formatCurrency(kpis.faturamento)}
           icon={TrendingUp}
           iconColor="text-green-400"
         />
-        <KpiCard
-          label="Lucro líquido"
-          value={formatCurrency(kpis.lucro)}
-          icon={Wallet}
-          iconColor={kpis.lucro >= 0 ? 'text-primary' : 'text-red-400'}
-        />
-      </div>
 
-      {/* A pagar */}
-      <div className="px-4 mb-4">
-        <Card className="p-4 flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-xs text-muted uppercase tracking-wide mb-1">A pagar</p>
-            <p className="text-xl font-bold text-red-400">{formatCurrency(aPagar)}</p>
-            <p className="text-xs text-muted mt-0.5">
-              {formatCurrency(kpis.despesasAbertas)} em despesas · {formatCurrency(totalPendente)} em comissões
-            </p>
-          </div>
-          <div className="p-2 rounded-lg bg-[#2A2A2A] text-red-400 flex-shrink-0">
-            <Banknote size={18} />
-          </div>
-        </Card>
+        {/* A pagar */}
+        <StatTile
+          label="A pagar"
+          value={formatCurrency(aPagar)}
+          icon={Banknote}
+          iconColor="text-red-400"
+          valueColor="text-red-400"
+        />
       </div>
 
       {/* Upcoming sessions (agenda) */}
