@@ -16,6 +16,7 @@ import { useAuth, getProfile } from '../hooks/useAuth'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
+import AmbientGlow from '../components/ui/AmbientGlow'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 function greeting() {
@@ -199,7 +200,8 @@ export default function Dashboard() {
   const aPagar = totalPendente + kpis.despesasAbertas
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       {/* Demo banner */}
       {!isConfigured && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center">

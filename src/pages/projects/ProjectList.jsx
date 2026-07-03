@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const statusConfig = {
@@ -44,7 +45,8 @@ export default function ProjectList() {
   })
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <div
         className="sticky top-0 z-30 glass-header flex items-center justify-between px-4 pb-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
