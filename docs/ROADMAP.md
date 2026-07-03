@@ -57,6 +57,17 @@
   ponte pro mundo real (o maior multiplicador).
 - **Fundação de contexto persistente** primeiro, senão perde tudo em resumo.
 
+## Atualizações
+- **Stack de ambiente decidida**: **VS Code + Obsidian + Git**. Usuário vai **formatar o
+  PC** antes, pra estruturar tudo. Configuração do ambiente marcada para a **tarde**
+  (após retomar/fechar ajustes do InkManager de manhã).
+- **Obsidian**: vault markdown local = "segunda mente". Versionável em Git e **lido/escrito
+  nativamente pelo Claude Code**. Para um dev, tende a ser **melhor que claude.ai Projects**
+  como base de conhecimento (contexto de marca, tendências, rotinas) — tudo local e em Git.
+  Considerar o vault do Obsidian como o repositório de contexto dos pilares.
+- **Pilar 1 (carreira tattoo)**: usuário tem **documentos de contexto bem detalhados** para
+  fornecer. Incorporar ao vault/repo quando começarmos o Pilar 1.
+
 ## Próximo passo estratégico (quando o usuário pedir)
 Montar a **fundação `.claude/` do InkManager** (CLAUDE.md + primeiras skills + settings
 com hooks) como **template** a ser replicado nos 3 pilares. Não iniciar até ele sinalizar
