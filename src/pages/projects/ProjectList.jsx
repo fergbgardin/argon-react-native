@@ -45,7 +45,10 @@ export default function ProjectList() {
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <div className="flex items-center justify-between px-4 pt-8 pb-4">
+      <div
+        className="sticky top-0 z-30 glass-header flex items-center justify-between px-4 pb-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+      >
         <h1 className="text-2xl font-bold text-white">Projetos</h1>
         <Button size="icon" onClick={() => navigate('/projetos/novo')}>
           <Plus size={18} />

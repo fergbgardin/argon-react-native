@@ -208,7 +208,10 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div className="px-4 pt-8 pb-4 flex items-center justify-between gap-3">
+      <div
+        className="sticky top-0 z-30 glass-header px-4 pb-4 flex items-center justify-between gap-3"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+      >
         <div className="min-w-0">
           <p className="text-xs text-muted uppercase tracking-widest mb-1">
             {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}

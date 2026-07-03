@@ -66,7 +66,10 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-bg pb-nav">
-      <div className="px-4 pt-8 pb-4">
+      <div
+        className="sticky top-0 z-30 glass-header px-4 pb-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
+      >
         <h1 className="text-2xl font-bold text-white">Configurações</h1>
       </div>
 
