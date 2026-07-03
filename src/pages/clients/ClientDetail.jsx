@@ -9,6 +9,7 @@ import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientDetail() {
@@ -45,7 +46,8 @@ export default function ClientDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader
         title={client.nome}
         actions={

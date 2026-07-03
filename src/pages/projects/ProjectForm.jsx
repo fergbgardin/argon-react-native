@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import Chip from '../../components/ui/Chip'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const PAYMENT_METHODS = [
@@ -167,7 +168,8 @@ export default function ProjectForm() {
   if (initLoading) return <LoadingSpinner fullPage />
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader title={isEditing ? 'Editar Projeto' : 'Novo Projeto'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">

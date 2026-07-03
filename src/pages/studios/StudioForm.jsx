@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
 import Modal from '../../components/ui/Modal'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function StudioForm() {
@@ -86,7 +87,8 @@ export default function StudioForm() {
   if (initLoading) return <LoadingSpinner fullPage />
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader
         title={isEditing ? 'Editar Estúdio' : 'Novo Estúdio'}
         actions={

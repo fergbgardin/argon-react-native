@@ -10,6 +10,7 @@ import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Chip from '../../components/ui/Chip'
 import Card from '../../components/ui/Card'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const PAYMENT_METHODS = [
@@ -293,7 +294,8 @@ export default function SessionForm() {
   const agulhasList = form.agulhas ? form.agulhas.split(', ').filter(Boolean) : []
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader title={isEditing ? 'Editar Sessão' : 'Nova Sessão'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">

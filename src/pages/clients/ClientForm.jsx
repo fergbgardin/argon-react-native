@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input'
 import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientForm() {
@@ -117,7 +118,8 @@ export default function ClientForm() {
   if (initLoading) return <LoadingSpinner fullPage />
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader title={isEditing ? 'Editar Cliente' : 'Novo Cliente'} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">

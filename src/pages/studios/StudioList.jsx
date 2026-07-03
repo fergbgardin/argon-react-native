@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/ui/EmptyState'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function StudioList() {
@@ -28,7 +29,8 @@ export default function StudioList() {
   })
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <div className="flex items-center justify-between px-4 pt-8 pb-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Estúdios</h1>

@@ -7,6 +7,7 @@ import { useData } from '../../hooks/useData'
 import PageHeader from '../../components/ui/PageHeader'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Modal from '../../components/ui/Modal'
 
@@ -40,7 +41,8 @@ export default function StudioPayout() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader title="Acerto de Contas" subtitle={studio?.nome} />
 
       <div className="px-4 flex flex-col gap-4">

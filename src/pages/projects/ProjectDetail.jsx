@@ -10,6 +10,7 @@ import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 import Chip from '../../components/ui/Chip'
 import Modal from '../../components/ui/Modal'
+import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const statusConfig = {
@@ -100,7 +101,8 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-nav">
+    <div className="relative min-h-screen bg-bg pb-nav">
+      <AmbientGlow />
       <PageHeader
         title={project.nome}
         subtitle={client?.nome}
