@@ -68,6 +68,21 @@
 - **Pilar 1 (carreira tattoo)**: usuário tem **documentos de contexto bem detalhados** para
   fornecer. Incorporar ao vault/repo quando começarmos o Pilar 1.
 
+## Mobile / plataforma (requisito firme)
+- O InkManager **deve ser um app mobile** com cara de nativo em **iPad, iPhone e Android**.
+  Web é uso secundário, não o alvo principal.
+- **UI touch-first**: `hover` vira feedback de toque (`:active`/press), **safe areas**
+  (`env(safe-area-inset-*)`), alvos ≥ 44px, zona do polegar, respeitar "reduzir movimento".
+- **Identidade única e coesa** entre as 3 plataformas — NÃO imitar o visual nativo de cada
+  OS. Marca consistente > parecer iOS num e Android no outro.
+- **Estado atual**: é um **PWA** (Vite + React) — já instalável na tela inicial dos 3.
+- **Decisão de distribuição (recomendação registrada)**: **PWA agora → Capacitor quando
+  precisar de loja / APIs nativas** (câmera, push, agenda). Capacitor reaproveita 100% do
+  código atual (um só codebase). **Evitar rewrite nativo (React Native)** — fragmenta o
+  código e reduz a alavancagem de iterar com IA. RN só se um requisito específico forçar.
+- Detalhe: App Store exige conta Apple Developer (US$99/ano) + revisão; Play, conta Google
+  (US$25 única). PWA não exige nenhum dos dois.
+
 ## Próximo passo estratégico (quando o usuário pedir)
 Montar a **fundação `.claude/` do InkManager** (CLAUDE.md + primeiras skills + settings
 com hooks) como **template** a ser replicado nos 3 pilares. Não iniciar até ele sinalizar
