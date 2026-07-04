@@ -15,8 +15,16 @@
   compartilham os mesmos dados (RLS desligada → anon key vê tudo). A migration adiciona
   `user_id` + RLS por dono em todas as tabelas, para cada usuário ter os próprios dados.
   Depois de rodar, testar com 2 contas.
-- **Em andamento (visual):** polir os componentes de conteúdo (`Card`, `Chip`, `Button`,
-  `Input`, itens de lista, estados vazios) no mesmo idioma do chrome+dashboard.
+- **Em andamento (visual):** polidos `Card` (rounded-2xl + feedback de toque), `Chip`/`Button`
+  (glow de marca no estado ativo/primário), `Input`/`Select`/`Textarea` (cores por token +
+  anel de foco + slots de ícone), `EmptyState` (ícone com gradiente da hero card) e `Badge`.
+  Busca e chips de filtro em ClientList/ProjectList/SessionList/Expenses migrados para os
+  componentes compartilhados (antes eram `<input>`/`<button>` soltos duplicando estilo);
+  StudioList ganhou o header sticky com glass que as outras telas já tinham (estava faltando).
+  **Falta:** telas de formulário/detalhe (ProjectForm, ProjectDetail, SessionDetail,
+  StudioForm, ClientForm, ClientDetail, Settings, StudioPayout) ainda têm trechos com cores
+  cruas (`bg-[#2A2A2A]`) em widgets customizados (toggles de segmento, seletor de área do
+  corpo) — não são um simples Input/Select, precisam de olhar caso a caso.
 - **Depois (não agora):** tornar o app PWA instalável de verdade (manifest, ícones, splash,
   service worker/offline, self-host da fonte Inter). Só após refinar o visual.
 
