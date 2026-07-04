@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, CalendarDays, CheckCircle2, Clock } from 'lucide-react'
+import { Plus, CalendarDays, CheckCircle2, Clock, Building2, Syringe } from 'lucide-react'
 import { sessionsApi } from '../../lib/api'
 import { formatDate, formatCurrency } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -46,8 +46,13 @@ export default function SessionList() {
     return map
   })()
 
-  function sessionTotal(s) {
-    return (s.session_payments || []).reduce((sum, p) => sum + (p.valor || 0), 0)
+  // Session's own monetary value: sum of session_payments (por_sessao) or
+  // the valor_sessao snapshot (fechado projects, whose client payment lives
+  // at the project level).
+  function sessionValor(s) {
+    const pagamentos = (s.session_payments || []).reduce((sum, p) => sum + (p.valor || 0), 0)
+    if (pagamentos > 0) return pagamentos
+    return s.valor_sessao || 0
   }
 
   return (
@@ -95,7 +100,10 @@ export default function SessionList() {
         ) : (
           filtered.map((session) => {
             const cfg = statusConfig[session.status] || statusConfig.agendada
-            const total = sessionTotal(session)
+            const isConcluded = session.status === 'concluida'
+            const valor = isConcluded ? sessionValor(session) : 0
+            const comissao = isConcluded ? (session.valor_comissao_estudio || 0) : 0
+            const material = isConcluded ? (session.custo_material || 0) : 0
             return (
               <Card
                 key={session.id}
@@ -128,12 +136,21 @@ export default function SessionList() {
                       )}
                     </div>
                   </div>
-                  {total > 0 && (
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-white font-semibold">{formatCurrency(total)}</p>
-                      {session.valor_comissao_estudio > 0 && (
-                        <p className="text-xs text-muted">
-                          -{formatCurrency(session.valor_comissao_estudio)}
+                  {(valor > 0 || comissao > 0 || material > 0) && (
+                    <div className="text-right flex-shrink-0 flex flex-col items-end gap-0.5">
+                      {valor > 0 && (
+                        <p className="text-white font-semibold">{formatCurrency(valor)}</p>
+                      )}
+                      {comissao > 0 && (
+                        <p className="text-xs text-muted flex items-center gap-1">
+                          -{formatCurrency(comissao)}
+                          <Building2 size={11} />
+                        </p>
+                      )}
+                      {material > 0 && (
+                        <p className="text-xs text-muted flex items-center gap-1">
+                          -{formatCurrency(material)}
+                          <Syringe size={11} />
                         </p>
                       )}
                     </div>
