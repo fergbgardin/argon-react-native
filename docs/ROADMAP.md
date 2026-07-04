@@ -3,6 +3,23 @@
 > Documento de planejamento durável. A memória de conversa é volátil; **isto** é a
 > fonte de verdade. Retomar por aqui em qualquer sessão futura.
 
+## Status atual do InkManager (jul/2026) — LER PRIMEIRO
+- **Feito (estético):** liquid glass no chrome (nav, header sticky, modais) em todas as
+  telas; `AmbientGlow` (luz de tinta) atrás do header em todas; Dashboard redesenhado
+  (bento: hero "Resultado" com gradiente de marca + tiles Faturamento/A pagar + tipografia
+  expressiva); gráfico próprio `CashflowChart` (barra/mês = receita, base custo + topo lucro
+  em gradiente) no lugar do Recharts.
+- **Feito (base):** PWA no Vercel (argon-react-native-five.vercel.app), login Google OAuth,
+  Supabase. Migrations 002/003/004 aplicadas.
+- **PRIORITÁRIO — rodar `supabase/migrations/005_multi_tenant.sql`:** hoje todos os usuários
+  compartilham os mesmos dados (RLS desligada → anon key vê tudo). A migration adiciona
+  `user_id` + RLS por dono em todas as tabelas, para cada usuário ter os próprios dados.
+  Depois de rodar, testar com 2 contas.
+- **Em andamento (visual):** polir os componentes de conteúdo (`Card`, `Chip`, `Button`,
+  `Input`, itens de lista, estados vazios) no mesmo idioma do chrome+dashboard.
+- **Depois (não agora):** tornar o app PWA instalável de verdade (manifest, ícones, splash,
+  service worker/offline, self-host da fonte Inter). Só após refinar o visual.
+
 ## Quem é o usuário
 - **12 anos como programador** — code-native, ambiente de código é íntimo.
 - Tatuador + empreendedor. Quer escalar muito, com muitas necessidades.
