@@ -360,11 +360,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Cashflow chart — revenue split into cost (base) + profit (gradient) */}
+      {/* Cashflow chart — signed monthly profit, gradient when positive */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs text-muted uppercase tracking-wide">
-            Fluxo — últimos 6 meses
+            Lucro — últimos 6 meses
           </p>
           <div className="flex items-center gap-3 font-mono text-[10px] tracking-wide text-muted">
             <span className="flex items-center gap-1.5">
@@ -372,8 +372,8 @@ export default function Dashboard() {
               Lucro
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-sm bg-[#3a3a46]" />
-              Custo
+              <span className="w-2 h-2 rounded-sm bg-[#f87171]" />
+              Prejuízo
             </span>
           </div>
         </div>
