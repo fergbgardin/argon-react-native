@@ -5,6 +5,7 @@ import { clientsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -36,16 +37,13 @@ export default function ClientList() {
 
       {/* Search */}
       <div className="px-4 mb-4">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou WhatsApp..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#2A2A2A] border border-[#333] rounded-lg pl-9 pr-3 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors"
-          />
-        </div>
+        <Input
+          type="text"
+          icon={Search}
+          placeholder="Buscar por nome ou WhatsApp..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div className="px-4 flex flex-col gap-2">

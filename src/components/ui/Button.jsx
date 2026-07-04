@@ -1,11 +1,11 @@
 import { cn } from '../../lib/utils'
 
 const variants = {
-  primary: 'bg-primary text-white hover:bg-primary-dark active:scale-[0.97]',
-  secondary: 'bg-[#2A2A2A] text-white hover:bg-[#333] active:scale-[0.97]',
-  ghost: 'text-muted hover:text-white hover:bg-[#2A2A2A] active:scale-[0.97]',
+  primary: 'bg-primary text-white shadow-[0_4px_16px_-4px_rgba(192,132,252,0.5)] hover:bg-primary-dark active:scale-[0.97]',
+  secondary: 'bg-border text-white hover:bg-card-hover active:scale-[0.97]',
+  ghost: 'text-muted hover:text-white hover:bg-border active:scale-[0.97]',
   danger: 'bg-red-600 text-white hover:bg-red-700 active:scale-[0.97]',
-  outline: 'border border-[#2A2A2A] text-white hover:bg-[#2A2A2A] active:scale-[0.97]',
+  outline: 'border border-border text-white hover:bg-border active:scale-[0.97]',
 }
 
 const sizes = {

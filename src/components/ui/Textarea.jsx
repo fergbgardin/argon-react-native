@@ -11,7 +11,7 @@ export default function Textarea({ label, error, hint, className, rows = 3, ...p
       <textarea
         rows={rows}
         className={cn(
-          'w-full bg-[#2A2A2A] border border-[#333] rounded-lg px-3 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors resize-none',
+          'w-full bg-card-hover border border-line rounded-xl px-3 py-2.5 text-white text-sm placeholder-[#555] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none',
           error && 'border-red-500',
           className
         )}

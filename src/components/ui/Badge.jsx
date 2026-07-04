@@ -1,7 +1,7 @@
 import { cn } from '../../lib/utils'
 
 const variants = {
-  default: 'bg-[#2A2A2A] text-muted',
+  default: 'bg-border text-muted',
   success: 'bg-green-500/20 text-green-400',
   warning: 'bg-amber-500/20 text-amber-400',
   danger: 'bg-red-500/20 text-red-400',

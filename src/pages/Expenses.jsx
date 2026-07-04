@@ -7,6 +7,7 @@ import { useData } from '../hooks/useData'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
+import Chip from '../components/ui/Chip'
 import Modal from '../components/ui/Modal'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
@@ -166,15 +167,9 @@ export default function Expenses() {
           { key: 'pago', label: 'Pagas' },
           { key: 'todas', label: 'Todas' },
         ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === key ? 'bg-primary text-white' : 'bg-[#2A2A2A] text-muted'
-            }`}
-          >
+          <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
             {label}
-          </button>
+          </Chip>
         ))}
       </div>
 

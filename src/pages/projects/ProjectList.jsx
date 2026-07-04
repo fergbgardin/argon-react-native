@@ -7,6 +7,8 @@ import { formatCurrency } from '../../lib/utils'
 import Card from '../../components/ui/Card'
 import Badge from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
+import Chip from '../../components/ui/Chip'
+import Input from '../../components/ui/Input'
 import EmptyState from '../../components/ui/EmptyState'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -59,24 +61,20 @@ export default function ProjectList() {
 
       {/* Search */}
       <div className="px-4 mb-3">
-        <div className="relative">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Buscar cliente ou projeto..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#2A2A2A] border border-[#333] rounded-lg pl-9 pr-8 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        <Input
+          type="text"
+          icon={Search}
+          placeholder="Buscar cliente ou projeto..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          right={
+            search && (
+              <button onClick={() => setSearch('')} className="pointer-events-auto">
+                <X size={14} />
+              </button>
+            )
+          }
+        />
       </div>
 
       <div className="px-4 flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
@@ -86,15 +84,9 @@ export default function ProjectList() {
           { key: 'pausado', label: 'Pausados' },
           { key: 'todos', label: 'Todos' },
         ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-              filter === key ? 'bg-primary text-white' : 'bg-[#2A2A2A] text-muted'
-            }`}
-          >
+          <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
             {label}
-          </button>
+          </Chip>
         ))}
       </div>
 
