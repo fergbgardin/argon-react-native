@@ -4,9 +4,6 @@ import {
   TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2,
   CalendarDays, Banknote
 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
-} from 'recharts'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi } from '../lib/api'
@@ -17,6 +14,7 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Avatar from '../components/ui/Avatar'
 import AmbientGlow from '../components/ui/AmbientGlow'
+import CashflowChart from '../components/ui/CashflowChart'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 function greeting() {
@@ -36,20 +34,6 @@ function StatTile({ label, value, icon: Icon, iconColor = 'text-primary', valueC
       <p className={`text-lg leading-none font-bold tracking-tight tabular-nums truncate ${valueColor}`}>
         {value}
       </p>
-    </div>
-  )
-}
-
-function CustomTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="bg-card border border-[#2A2A2A] rounded-lg px-3 py-2 text-xs">
-      <p className="text-muted mb-1">{label}</p>
-      {payload.map((p) => (
-        <p key={p.dataKey} className="font-medium" style={{ color: p.color }}>
-          {p.name}: {formatCurrency(p.value)}
-        </p>
-      ))}
     </div>
   )
 }
@@ -376,31 +360,25 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Entradas vs Saídas Chart */}
+      {/* Cashflow chart — revenue split into cost (base) + profit (gradient) */}
       <div className="px-4 mb-4">
-        <p className="text-xs text-muted uppercase tracking-wide mb-3">
-          Entradas vs Saídas — últimos 6 meses
-        </p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-muted uppercase tracking-wide">
+            Fluxo — últimos 6 meses
+          </p>
+          <div className="flex items-center gap-3 font-mono text-[10px] tracking-wide text-muted">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-sm" style={{ background: 'linear-gradient(180deg,#f0637e,#7c6cff)' }} />
+              Lucro
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-sm bg-[#3a3a46]" />
+              Custo
+            </span>
+          </div>
+        </div>
         <Card className="p-4">
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
-              <XAxis
-                dataKey="name"
-                tick={{ fill: '#71717A', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis hide />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff08' }} />
-              <Legend
-                iconType="circle"
-                iconSize={8}
-                wrapperStyle={{ fontSize: 11, color: '#71717A' }}
-              />
-              <Bar dataKey="entradas" name="Entradas" fill="#34D399" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="saidas" name="Saídas" fill="#F87171" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <CashflowChart data={chartData} />
         </Card>
       </div>
 
