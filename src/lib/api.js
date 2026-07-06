@@ -164,6 +164,16 @@ export const settingsApi = {
     : mockResponse(data),
 }
 
+// ── Profiles (privacy acceptance) ─────────────────────────
+export const profilesApi = {
+  get: (userId) => isConfigured
+    ? supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    : mockResponse({ id: userId, privacy_accepted_at: new Date().toISOString() }),
+  acceptPrivacy: (userId) => isConfigured
+    ? supabase.from('profiles').upsert({ id: userId, privacy_accepted_at: new Date().toISOString() }, { onConflict: 'id' }).select().single()
+    : mockResponse({ id: userId, privacy_accepted_at: new Date().toISOString() }),
+}
+
 // ── File Upload ───────────────────────────────────────────
 export const storageApi = {
   uploadAnamnese: async (file, sessionId) => {

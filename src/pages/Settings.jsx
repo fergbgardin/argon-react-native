@@ -22,9 +22,9 @@ export default function Settings() {
 
   const [form, setForm] = useState({
     id: null,
-    custo_material_pequena: 30,
-    custo_material_media: 60,
-    custo_material_grande: 100,
+    custo_material_pequena: 70,
+    custo_material_media: 150,
+    custo_material_grande: 250,
     presets_agulhas: [],
   })
 
@@ -35,9 +35,9 @@ export default function Settings() {
       if (data) {
         setForm({
           id: data.id,
-          custo_material_pequena: data.custo_material_pequena ?? 30,
-          custo_material_media: data.custo_material_media ?? 60,
-          custo_material_grande: data.custo_material_grande ?? 100,
+          custo_material_pequena: data.custo_material_pequena ?? 70,
+          custo_material_media: data.custo_material_media ?? 150,
+          custo_material_grande: data.custo_material_grande ?? 250,
           presets_agulhas: data.presets_agulhas || [],
         })
       }
@@ -57,7 +57,12 @@ export default function Settings() {
 
   async function handleSave() {
     setSaving(true)
-    await settingsApi.upsert(form)
+    await settingsApi.upsert({
+      ...form,
+      custo_material_pequena: parseFloat(form.custo_material_pequena) || 0,
+      custo_material_media: parseFloat(form.custo_material_media) || 0,
+      custo_material_grande: parseFloat(form.custo_material_grande) || 0,
+    })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -95,27 +100,30 @@ export default function Settings() {
               label="Pequena (R$)"
               type="number"
               step="0.01"
+              placeholder="70"
               value={form.custo_material_pequena}
               onChange={(e) =>
-                setForm((f) => ({ ...f, custo_material_pequena: parseFloat(e.target.value) || 0 }))
+                setForm((f) => ({ ...f, custo_material_pequena: e.target.value }))
               }
             />
             <Input
               label="Média (R$)"
               type="number"
               step="0.01"
+              placeholder="150"
               value={form.custo_material_media}
               onChange={(e) =>
-                setForm((f) => ({ ...f, custo_material_media: parseFloat(e.target.value) || 0 }))
+                setForm((f) => ({ ...f, custo_material_media: e.target.value }))
               }
             />
             <Input
               label="Grande (R$)"
               type="number"
               step="0.01"
+              placeholder="250"
               value={form.custo_material_grande}
               onChange={(e) =>
-                setForm((f) => ({ ...f, custo_material_grande: parseFloat(e.target.value) || 0 }))
+                setForm((f) => ({ ...f, custo_material_grande: e.target.value }))
               }
             />
           </div>

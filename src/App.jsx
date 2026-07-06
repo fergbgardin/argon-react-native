@@ -17,6 +17,7 @@ import StudioPayout from './pages/studios/StudioPayout'
 import Expenses from './pages/Expenses'
 import Settings from './pages/Settings'
 import LoadingSpinner from './components/ui/LoadingSpinner'
+import PrivacyGate from './components/PrivacyGate'
 import { useAuth } from './hooks/useAuth'
 import { isConfigured } from './lib/supabase'
 
@@ -29,49 +30,51 @@ export default function App() {
   if (isConfigured && !session) return <Login />
 
   return (
-    <BrowserRouter>
-      <div className="max-w-lg mx-auto relative min-h-screen bg-bg">
-        <Routes>
-          {/* Dashboard */}
-          <Route path="/" element={<Dashboard />} />
+    <PrivacyGate user={session?.user}>
+      <BrowserRouter>
+        <div className="max-w-lg mx-auto relative min-h-screen bg-bg">
+          <Routes>
+            {/* Dashboard */}
+            <Route path="/" element={<Dashboard />} />
 
-          {/* Sessions */}
-          <Route path="/sessoes" element={<SessionList />} />
-          <Route path="/sessoes/nova" element={<SessionForm />} />
-          <Route path="/sessoes/:id" element={<SessionDetail />} />
-          <Route path="/sessoes/:id/editar" element={<SessionForm />} />
+            {/* Sessions */}
+            <Route path="/sessoes" element={<SessionList />} />
+            <Route path="/sessoes/nova" element={<SessionForm />} />
+            <Route path="/sessoes/:id" element={<SessionDetail />} />
+            <Route path="/sessoes/:id/editar" element={<SessionForm />} />
 
-          {/* Projects */}
-          <Route path="/projetos" element={<ProjectList />} />
-          <Route path="/projetos/novo" element={<ProjectForm />} />
-          <Route path="/projetos/:id" element={<ProjectDetail />} />
-          <Route path="/projetos/:id/editar" element={<ProjectForm />} />
+            {/* Projects */}
+            <Route path="/projetos" element={<ProjectList />} />
+            <Route path="/projetos/novo" element={<ProjectForm />} />
+            <Route path="/projetos/:id" element={<ProjectDetail />} />
+            <Route path="/projetos/:id/editar" element={<ProjectForm />} />
 
-          {/* Clients */}
-          <Route path="/clientes" element={<ClientList />} />
-          <Route path="/clientes/novo" element={<ClientForm />} />
-          <Route path="/clientes/:id" element={<ClientDetail />} />
-          <Route path="/clientes/:id/editar" element={<ClientForm />} />
+            {/* Clients */}
+            <Route path="/clientes" element={<ClientList />} />
+            <Route path="/clientes/novo" element={<ClientForm />} />
+            <Route path="/clientes/:id" element={<ClientDetail />} />
+            <Route path="/clientes/:id/editar" element={<ClientForm />} />
 
-          {/* Studios */}
-          <Route path="/studios" element={<StudioList />} />
-          <Route path="/studios/novo" element={<StudioForm />} />
-          <Route path="/studios/:id/editar" element={<StudioForm />} />
-          <Route path="/studios/:id/acerto" element={<StudioPayout />} />
+            {/* Studios */}
+            <Route path="/studios" element={<StudioList />} />
+            <Route path="/studios/novo" element={<StudioForm />} />
+            <Route path="/studios/:id/editar" element={<StudioForm />} />
+            <Route path="/studios/:id/acerto" element={<StudioPayout />} />
 
-          {/* Expenses */}
-          <Route path="/despesas" element={<Expenses />} />
-          <Route path="/despesas/nova" element={<Expenses />} />
+            {/* Expenses */}
+            <Route path="/despesas" element={<Expenses />} />
+            <Route path="/despesas/nova" element={<Expenses />} />
 
-          {/* Settings */}
-          <Route path="/config" element={<Settings />} />
+            {/* Settings */}
+            <Route path="/config" element={<Settings />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
 
-        <BottomNav />
-      </div>
-    </BrowserRouter>
+          <BottomNav />
+        </div>
+      </BrowserRouter>
+    </PrivacyGate>
   )
 }

@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils'
 
 export default function Select({ label, error, children, className, ...props }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 min-w-0">
       {label && (
         <label className="text-xs font-medium text-muted uppercase tracking-wide">
           {label}

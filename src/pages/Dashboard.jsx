@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2,
-  CalendarDays, Banknote
+  CalendarDays, Banknote, Settings as SettingsIcon
 } from 'lucide-react'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi } from '../lib/api'
+import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi, studiosApi, settingsApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
 import { formatCurrency, formatDate } from '../lib/utils'
 import { useAuth, getProfile } from '../hooks/useAuth'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
 import Avatar from '../components/ui/Avatar'
 import AmbientGlow from '../components/ui/AmbientGlow'
 import CashflowChart from '../components/ui/CashflowChart'
@@ -47,6 +48,16 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([])
   const [birthdays, setBirthdays] = useState([])
   const [upcomingSessions, setUpcomingSessions] = useState([])
+  const [hasStudios, setHasStudios] = useState(true)
+  const [hasMaterialCosts, setHasMaterialCosts] = useState(true)
+  const [materialAlertDismissed, setMaterialAlertDismissed] = useState(
+    () => localStorage.getItem('materialCostAlertDismissed') === 'true'
+  )
+
+  function dismissMaterialAlert() {
+    localStorage.setItem('materialCostAlertDismissed', 'true')
+    setMaterialAlertDismissed(true)
+  }
 
   useEffect(() => {
     loadDashboard()
@@ -55,17 +66,30 @@ export default function Dashboard() {
   async function loadDashboard() {
     setLoading(true)
     try {
-      const [sessionsRes, expensesRes, clientsRes, projPaysRes] = await Promise.all([
+      const [sessionsRes, expensesRes, clientsRes, projPaysRes, studiosRes, settingsRes] = await Promise.all([
         sessionsApi.list(),
         expensesApi.list(),
         clientsApi.list(),
         projectPaymentsApi.listAll(),
+        studiosApi.list(),
+        settingsApi.get(),
       ])
 
       const sessions = sessionsRes.data || []
       const expenses = expensesRes.data || []
       const clients = clientsRes.data || []
       const projectPayments = projPaysRes.data || []
+      const studios = studiosRes.data || []
+      const settings = settingsRes.data
+
+      setHasStudios(studios.length > 0)
+      setHasMaterialCosts(
+        !!settings && (
+          settings.custo_material_pequena > 0 ||
+          settings.custo_material_media > 0 ||
+          settings.custo_material_grande > 0
+        )
+      )
 
       const now = new Date()
       const today = now.toISOString().split('T')[0]
@@ -213,6 +237,51 @@ export default function Dashboard() {
           </button>
         )}
       </div>
+
+      {/* Setup alerts — grouped, shown until each is resolved */}
+      {(!hasStudios || (!hasMaterialCosts && !materialAlertDismissed)) && (
+        <div className="px-4 mb-4 flex flex-col gap-2">
+          {!hasStudios && (
+            <Card
+              className="p-3 flex items-center gap-3"
+              onClick={() => navigate('/studios/novo')}
+            >
+              <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                <Building2 size={16} className="text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">Cadastre um estúdio</p>
+                <p className="text-xs text-muted">Necessário para registrar sessões</p>
+              </div>
+              <ChevronRight size={16} className="text-muted flex-shrink-0" />
+            </Card>
+          )}
+          {!hasMaterialCosts && !materialAlertDismissed && (
+            <Card className="p-3 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                  <SettingsIcon size={16} className="text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">Custo de material no padrão</p>
+                  <p className="text-xs text-muted">
+                    Estamos usando os valores padrão (Pequena R$70, Média R$150, Grande R$250).
+                    Você pode alterar isso quando quiser em Configurações.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button size="sm" variant="ghost" onClick={dismissMaterialAlert}>
+                  Entendi
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => navigate('/config')}>
+                  Configurar
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Financial bento — hero result + supporting stats */}
       <div className="px-4 grid grid-cols-2 gap-3 mb-5">

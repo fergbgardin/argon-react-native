@@ -30,6 +30,7 @@ export default function ProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [deleteModal, setDeleteModal] = useState(false)
+  const [blockedModal, setBlockedModal] = useState(false)
   const [payForma, setPayForma] = useState('pix')
   const [payValor, setPayValor] = useState('')
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0])
@@ -75,6 +76,14 @@ export default function ProjectDetail() {
     navigate('/projetos')
   }
 
+  function openDeleteModal() {
+    if ((sessions || []).length > 0) {
+      setBlockedModal(true)
+      return
+    }
+    setDeleteModal(true)
+  }
+
   async function handleStatusChange(status) {
     await projectsApi.update(id, { status })
     window.location.reload()
@@ -109,9 +118,9 @@ export default function ProjectDetail() {
         actions={
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate(`/projetos/${id}/editar`)}>
-              <Edit size={18} />
+              <Edit size={18} className="text-primary" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setDeleteModal(true)}>
+            <Button variant="ghost" size="icon" onClick={openDeleteModal}>
               <Trash2 size={18} className="text-red-400" />
             </Button>
           </div>
@@ -346,7 +355,7 @@ export default function ProjectDetail() {
 
       <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir projeto">
         <p className="text-sm text-muted mb-4">
-          Tem certeza? Todas as sessões vinculadas também serão afetadas.
+          Tem certeza? Esta ação não pode ser desfeita.
         </p>
         <div className="flex gap-3">
           <Button variant="outline" full onClick={() => setDeleteModal(false)}>
@@ -356,6 +365,16 @@ export default function ProjectDetail() {
             Excluir
           </Button>
         </div>
+      </Modal>
+
+      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title="Não é possível excluir">
+        <p className="text-sm text-muted mb-4">
+          {(sessions || []).length === 1
+            ? 'Este projeto tem 1 sessão vinculada.'
+            : `Este projeto tem ${(sessions || []).length} sessões vinculadas.`}{' '}
+          Exclua as sessões antes de excluir o projeto.
+        </p>
+        <Button full onClick={() => setBlockedModal(false)}>Entendi</Button>
       </Modal>
     </div>
   )

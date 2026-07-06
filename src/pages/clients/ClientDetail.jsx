@@ -16,6 +16,7 @@ export default function ClientDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [deleteModal, setDeleteModal] = useState(false)
+  const [blockedModal, setBlockedModal] = useState(false)
 
   const { data: client, loading: cLoading } = useData(() => clientsApi.get(id), [id])
   const { data: projects, loading: pLoading } = useData(
@@ -39,6 +40,14 @@ export default function ClientDetail() {
     navigate(-1)
   }
 
+  function openDeleteModal() {
+    if ((projects || []).length > 0) {
+      setBlockedModal(true)
+      return
+    }
+    setDeleteModal(true)
+  }
+
   const statusConfig = {
     ativo: { label: 'Ativo', variant: 'success' },
     concluido: { label: 'Concluído', variant: 'default' },
@@ -53,9 +62,9 @@ export default function ClientDetail() {
         actions={
           <div className="flex gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate(`/clientes/${id}/editar`)}>
-              <Edit size={18} />
+              <Edit size={18} className="text-primary" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setDeleteModal(true)}>
+            <Button variant="ghost" size="icon" onClick={openDeleteModal}>
               <Trash2 size={18} className="text-red-400" />
             </Button>
           </div>
@@ -159,6 +168,16 @@ export default function ClientDetail() {
           <Button variant="outline" full onClick={() => setDeleteModal(false)}>Cancelar</Button>
           <Button variant="danger" full onClick={handleDelete}>Excluir</Button>
         </div>
+      </Modal>
+
+      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title="Não é possível excluir">
+        <p className="text-sm text-muted mb-4">
+          {(projects || []).length === 1
+            ? 'Este cliente tem 1 projeto vinculado.'
+            : `Este cliente tem ${(projects || []).length} projetos vinculados.`}{' '}
+          Exclua ou transfira os projetos antes de excluir o cliente.
+        </p>
+        <Button full onClick={() => setBlockedModal(false)}>Entendi</Button>
       </Modal>
     </div>
   )

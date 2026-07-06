@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp, X, Camera } from 'lucide-react'
+import { ChevronDown, ChevronUp, X, Camera, Building2, Plus } from 'lucide-react'
 import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi, storageApi } from '../../lib/api'
 import { calcComissao } from '../../lib/utils'
 import PageHeader from '../../components/ui/PageHeader'
@@ -10,6 +10,7 @@ import Textarea from '../../components/ui/Textarea'
 import Button from '../../components/ui/Button'
 import Chip from '../../components/ui/Chip'
 import Card from '../../components/ui/Card'
+import EmptyState from '../../components/ui/EmptyState'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
@@ -149,11 +150,10 @@ export default function SessionForm() {
   }, [form.studio_id, form.project_id, payValor, pay2Valor, pay2Enabled, sessionValorFechado])
 
   function getMaterialValue(size) {
-    if (!settings) return 0
     const map = {
-      pequena: settings.custo_material_pequena || 30,
-      media: settings.custo_material_media || 60,
-      grande: settings.custo_material_grande || 100,
+      pequena: settings?.custo_material_pequena || 70,
+      media: settings?.custo_material_media || 150,
+      grande: settings?.custo_material_grande || 250,
     }
     return map[size] || 0
   }
@@ -229,7 +229,7 @@ export default function SessionForm() {
   function validate() {
     const errs = {}
     if (!form.project_id) errs.project_id = 'Selecione um projeto'
-    if (form.status === 'concluida' && !form.studio_id) errs.studio_id = 'Selecione um estúdio'
+    if (!form.studio_id) errs.studio_id = 'Selecione um estúdio'
     if (!form.data_sessao) errs.data_sessao = 'Informe a data'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -242,7 +242,7 @@ export default function SessionForm() {
 
     const sessionData = {
       project_id: form.project_id,
-      studio_id: form.studio_id,
+      studio_id: form.studio_id || null,
       status: form.status,
       data_sessao: form.data_sessao,
       custo_material: form.custo_material_valor ? parseFloat(form.custo_material_valor) : null,
@@ -287,6 +287,25 @@ export default function SessionForm() {
   }
 
   if (initLoading) return <LoadingSpinner fullPage />
+
+  if (!isEditing && studios.length === 0) {
+    return (
+      <div className="relative min-h-screen bg-bg pb-nav">
+        <AmbientGlow />
+        <PageHeader title="Nova Sessão" />
+        <EmptyState
+          icon={Building2}
+          title="Cadastre um estúdio primeiro"
+          description="Toda sessão precisa estar vinculada a um estúdio. Cadastre pelo menos um antes de criar sessões."
+          action={
+            <Button onClick={() => navigate('/studios/novo')}>
+              <Plus size={16} /> Cadastrar Estúdio
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
 
   const selectedProject = projects.find((p) => p.id === form.project_id)
   const selectedStudio = studios.find((s) => s.id === form.studio_id)

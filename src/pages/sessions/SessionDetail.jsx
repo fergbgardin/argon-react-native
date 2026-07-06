@@ -87,7 +87,7 @@ export default function SessionDetail() {
               size="icon"
               onClick={() => navigate(`/sessoes/${id}/editar`)}
             >
-              <Edit size={18} />
+              <Edit size={18} className="text-primary" />
             </Button>
             <Button
               variant="ghost"
