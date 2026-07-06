@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, FolderKanban, Search, X } from 'lucide-react'
+import { Plus, FolderKanban, Search, X, Building2, Syringe } from 'lucide-react'
 import { projectsApi, sessionsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import { formatCurrency } from '../../lib/utils'
@@ -34,6 +34,27 @@ export default function ProjectList() {
     if (s.status === 'concluida') {
       doneByProject[s.project_id] = (doneByProject[s.project_id] || 0) + 1
     }
+  })
+
+  // Session's own monetary value: sum of session_payments (por_sessao) or
+  // the valor_sessao snapshot (fechado projects, whose client payment lives
+  // at the project level).
+  function sessionValor(s) {
+    const pagamentos = (s.session_payments || []).reduce((sum, p) => sum + (p.valor || 0), 0)
+    if (pagamentos > 0) return pagamentos
+    return s.valor_sessao || 0
+  }
+
+  // Financial summary per project, considering only concluded sessions
+  // (financeiro só considera sessão concluída, mesma regra de SessionList).
+  const financeByProject = {}
+  ;(sessions || []).forEach((s) => {
+    if (s.status !== 'concluida') return
+    const entry = financeByProject[s.project_id] || { valor: 0, comissao: 0, material: 0 }
+    entry.valor += sessionValor(s)
+    entry.comissao += s.valor_comissao_estudio || 0
+    entry.material += s.custo_material || 0
+    financeByProject[s.project_id] = entry
   })
 
   const normalize = (s) => s?.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') || ''
@@ -106,6 +127,8 @@ export default function ProjectList() {
         ) : (
           filtered.map((project) => {
             const cfg = statusConfig[project.status] || statusConfig.ativo
+            const isFechado = project.tipo_cobranca === 'fechado'
+            const finance = financeByProject[project.id] || { valor: 0, comissao: 0, material: 0 }
             return (
               <Card
                 key={project.id}
@@ -133,10 +156,32 @@ export default function ProjectList() {
                       </span>
                     </p>
                   </div>
-                  {project.valor_total > 0 && (
-                    <span className="text-sm font-semibold text-white">
-                      {formatCurrency(project.valor_total)}
-                    </span>
+                  {isFechado ? (
+                    project.valor_total > 0 && (
+                      <span className="text-sm font-semibold text-white">
+                        {formatCurrency(project.valor_total)}
+                      </span>
+                    )
+                  ) : (
+                    (finance.valor > 0 || finance.comissao > 0 || finance.material > 0) && (
+                      <div className="text-right flex-shrink-0 flex flex-col items-end gap-0.5">
+                        {finance.valor > 0 && (
+                          <p className="text-white font-semibold">{formatCurrency(finance.valor)}</p>
+                        )}
+                        {finance.comissao > 0 && (
+                          <p className="text-xs text-muted flex items-center gap-1">
+                            -{formatCurrency(finance.comissao)}
+                            <Building2 size={11} />
+                          </p>
+                        )}
+                        {finance.material > 0 && (
+                          <p className="text-xs text-muted flex items-center gap-1">
+                            -{formatCurrency(finance.material)}
+                            <Syringe size={11} />
+                          </p>
+                        )}
+                      </div>
+                    )
                   )}
                 </div>
               </Card>
