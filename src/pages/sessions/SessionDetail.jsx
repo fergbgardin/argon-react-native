@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   Edit, Trash2, AlertTriangle, Camera, ExternalLink, CheckCircle2
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { sessionsApi, storageApi } from '../../lib/api'
 import { formatDate, formatCurrency, whatsappLink } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -15,6 +16,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function SessionDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: session, loading, refetch } = useData(() => sessionsApi.get(id), [id])
@@ -29,8 +31,8 @@ export default function SessionDetail() {
   if (loading) return <LoadingSpinner fullPage />
   if (!loading && !session) return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-      <p className="text-muted">Sessão não encontrada</p>
-      <button onClick={() => navigate('/sessoes')} className="text-primary text-sm">← Voltar para sessões</button>
+      <p className="text-muted">{t('sessions.detail.notFound')}</p>
+      <button onClick={() => navigate('/sessoes')} className="text-primary text-sm">{t('sessions.detail.backToSessions')}</button>
     </div>
   )
 
@@ -62,7 +64,7 @@ export default function SessionDetail() {
     const { url, error } = await storageApi.uploadAnamnese(file, id)
     if (error || !url) {
       setPhotoPreview(null)
-      alert(`Não foi possível enviar a foto: ${error?.message || 'verifique se o bucket "inkmanager" existe no Supabase Storage (público).'}`)
+      alert(t('sessions.detail.photoUploadError', { reason: error?.message || t('sessions.detail.photoUploadFallbackReason') }))
     } else {
       await sessionsApi.update(id, { foto_anamnese_url: url })
       await refetch()
@@ -78,7 +80,7 @@ export default function SessionDetail() {
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
       <PageHeader
-        title={client?.nome || 'Sessão'}
+        title={client?.nome || t('sessions.detail.fallbackTitle')}
         subtitle={project?.nome}
         actions={
           <div className="flex gap-2">
@@ -105,7 +107,7 @@ export default function SessionDetail() {
         <Card className="p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <Badge variant={isAgendada ? 'warning' : 'success'}>
-              {isAgendada ? 'Agendada' : 'Concluída'}
+              {isAgendada ? t('common.sessionStatus.scheduled') : t('common.sessionStatus.completed')}
             </Badge>
             <span className="text-sm text-muted">{formatDate(session.data_sessao)}</span>
           </div>
@@ -118,9 +120,9 @@ export default function SessionDetail() {
           )}
 
           <div className="flex flex-col gap-2">
-            <Row label="Cliente" value={client?.nome} />
-            <Row label="Projeto" value={project?.nome} />
-            <Row label="Estúdio" value={studio?.nome} />
+            <Row label={t('sessions.detail.client')} value={client?.nome} />
+            <Row label={t('sessions.detail.project')} value={project?.nome} />
+            <Row label={t('sessions.detail.studio')} value={studio?.nome} />
           </div>
 
           {client?.whatsapp && (
@@ -131,17 +133,17 @@ export default function SessionDetail() {
               className="flex items-center gap-2 text-sm text-green-400"
             >
               <ExternalLink size={14} />
-              WhatsApp: {client.whatsapp}
+              {t('sessions.detail.whatsapp', { phone: client.whatsapp })}
             </a>
           )}
         </Card>
 
         {/* Technical details */}
         <Card className="p-4 flex flex-col gap-2">
-          <p className="text-xs text-muted uppercase tracking-wide">Detalhes técnicos</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.detail.technicalDetails')}</p>
           {session.agulhas ? (
             <div>
-              <p className="text-xs text-muted mb-1.5">Agulhas</p>
+              <p className="text-xs text-muted mb-1.5">{t('sessions.detail.needles')}</p>
               <div className="flex flex-wrap gap-2">
                 {session.agulhas.split(', ').filter(Boolean).map((a) => (
                   <span
@@ -154,27 +156,27 @@ export default function SessionDetail() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted">Nenhuma agulha registrada</p>
+            <p className="text-sm text-muted">{t('sessions.detail.noNeedles')}</p>
           )}
         </Card>
 
         {/* Financial info — shown when concluded, a payment exists, or a session value was set */}
         {(!isAgendada || payments.length > 0 || session.valor_sessao > 0) && (
           <Card className="p-4 flex flex-col gap-3">
-            <p className="text-xs text-muted uppercase tracking-wide">Financeiro</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.detail.financial')}</p>
 
             {isFechado ? (
               <div className="flex flex-col gap-1">
                 {session.valor_sessao > 0 ? (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted">Valor desta sessão</span>
+                    <span className="text-muted">{t('sessions.detail.sessionValue')}</span>
                     <span className="text-white">{formatCurrency(session.valor_sessao)}</span>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted">Valor desta sessão não informado</p>
+                  <p className="text-sm text-muted">{t('sessions.detail.sessionValueMissing')}</p>
                 )}
                 <p className="text-xs text-muted mt-1">
-                  Pagamentos deste projeto fechado são gerenciados na tela do projeto.
+                  {t('sessions.detail.closedProjectHint')}
                 </p>
               </div>
             ) : payments.length > 0 ? (
@@ -186,30 +188,30 @@ export default function SessionDetail() {
                   </div>
                 ))}
                 <div className="border-t border-[#2A2A2A] pt-2 mt-1 flex justify-between text-sm font-semibold">
-                  <span className="text-muted">Total recebido</span>
+                  <span className="text-muted">{t('sessions.detail.totalReceived')}</span>
                   <span className="text-white">{formatCurrency(totalPago)}</span>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted">Nenhum pagamento registrado</p>
+              <p className="text-sm text-muted">{t('sessions.detail.noPayments')}</p>
             )}
 
             <div className="grid grid-cols-2 gap-3 pt-1">
               {session.custo_material > 0 && (
                 <div>
-                  <p className="text-xs text-muted">Material</p>
+                  <p className="text-xs text-muted">{t('sessions.detail.material')}</p>
                   <p className="text-sm text-white">{formatCurrency(session.custo_material)}</p>
                 </div>
               )}
               {session.valor_comissao_estudio > 0 && (
                 <div>
-                  <p className="text-xs text-muted">Comissão estúdio</p>
+                  <p className="text-xs text-muted">{t('sessions.detail.studioCommission')}</p>
                   <p className="text-sm text-amber-400">
                     {formatCurrency(session.valor_comissao_estudio)}
                     {session.payout_id ? (
-                      <span className="ml-1 text-xs text-green-400">(repassado)</span>
+                      <span className="ml-1 text-xs text-green-400">{t('sessions.detail.settledTag')}</span>
                     ) : (
-                      <span className="ml-1 text-xs text-amber-400">(pendente)</span>
+                      <span className="ml-1 text-xs text-amber-400">{t('sessions.detail.pendingTag')}</span>
                     )}
                   </p>
                 </div>
@@ -225,11 +227,11 @@ export default function SessionDetail() {
                   className="border border-amber-500/40 text-amber-400 mt-1"
                   onClick={() => navigate(`/studios/${session.studio_id}/acerto`)}
                 >
-                  Acertar comissão do estúdio
+                  {t('sessions.detail.settleCommission')}
                 </Button>
               ) : (
                 <p className="text-xs text-muted mt-1">
-                  A comissão poderá ser acertada quando a sessão for concluída.
+                  {t('sessions.detail.settleHint')}
                 </p>
               )
             )}
@@ -239,7 +241,7 @@ export default function SessionDetail() {
         {/* Anamnese photo */}
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-muted uppercase tracking-wide">Anamnese</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.detail.anamnesis')}</p>
             <button
               className="flex items-center gap-1 text-xs text-primary"
               onClick={() => fileRef.current?.click()}
@@ -250,7 +252,7 @@ export default function SessionDetail() {
               ) : (
                 <Camera size={14} />
               )}
-              {session.foto_anamnese_url ? 'Substituir' : 'Adicionar foto'}
+              {session.foto_anamnese_url ? t('sessions.detail.replacePhoto') : t('sessions.detail.addPhoto')}
             </button>
             <input
               ref={fileRef}
@@ -265,18 +267,18 @@ export default function SessionDetail() {
           {(photoPreview || session.foto_anamnese_url) ? (
             <img
               src={photoPreview || session.foto_anamnese_url}
-              alt="Anamnese"
+              alt={t('sessions.detail.anamnesis')}
               className="w-full rounded-lg object-cover max-h-64"
             />
           ) : (
-            <p className="text-sm text-muted">Nenhuma foto adicionada</p>
+            <p className="text-sm text-muted">{t('sessions.detail.noPhoto')}</p>
           )}
         </Card>
 
         {/* Notes */}
         {session.obs && (
           <Card className="p-4">
-            <p className="text-xs text-muted uppercase tracking-wide mb-2">Observações</p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('sessions.detail.notes')}</p>
             <p className="text-sm text-white whitespace-pre-wrap">{session.obs}</p>
           </Card>
         )}
@@ -286,35 +288,33 @@ export default function SessionDetail() {
           <Card className="p-4 border-primary/30 flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={18} className="text-primary" />
-              <p className="text-sm font-medium text-white">Concluir sessão</p>
+              <p className="text-sm font-medium text-white">{t('sessions.detail.completeSession')}</p>
             </div>
             <p className="text-xs text-muted">
-              Confirme pagamento, material e comissão pelo botão de editar (lápis) antes de concluir.
-              Ao concluir, os dados já preenchidos são mantidos.
+              {t('sessions.detail.completeHint')}
             </p>
             {!(session.valor_comissao_estudio > 0) && (
               <p className="text-xs text-amber-400">
-                Atenção: esta sessão está sem comissão de estúdio. Se houver comissão a repassar,
-                edite a sessão e preencha antes de concluir.
+                {t('sessions.detail.noCommissionWarning')}
               </p>
             )}
             <Button full onClick={handleComplete} loading={completing}>
-              <CheckCircle2 size={16} /> Marcar como Concluída
+              <CheckCircle2 size={16} /> {t('sessions.detail.markComplete')}
             </Button>
           </Card>
         )}
       </div>
 
-      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir sessão">
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title={t('sessions.detail.deleteTitle')}>
         <p className="text-sm text-muted mb-4">
-          Tem certeza? Esta ação não pode ser desfeita.
+          {t('sessions.detail.deleteConfirm')}
         </p>
         <div className="flex gap-3">
           <Button variant="outline" full onClick={() => setDeleteModal(false)}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" full onClick={handleDelete}>
-            Excluir
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>

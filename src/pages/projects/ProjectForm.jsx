@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { projectsApi, clientsApi, projectPaymentsApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
@@ -11,20 +12,23 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const PAYMENT_METHODS = [
-  { key: 'pix', label: 'PIX' },
-  { key: 'credito', label: 'Crédito' },
-  { key: 'debito', label: 'Débito' },
-  { key: 'dinheiro', label: 'Dinheiro' },
+  { key: 'pix', labelKey: 'common.paymentMethods.pix' },
+  { key: 'credito', labelKey: 'common.paymentMethods.credito' },
+  { key: 'debito', labelKey: 'common.paymentMethods.debito' },
+  { key: 'dinheiro', labelKey: 'common.paymentMethods.dinheiro' },
 ]
 
+// `areas` são persistidas literalmente em project.area_corpo — não traduzir
+// os valores, só os cabeçalhos de grupo (labelKey) exibidos na UI.
 const BODY_AREA_GROUPS = [
-  { label: 'Cabeça / Pescoço', areas: ['Cabeça', 'Nuca', 'Pescoço', 'Rosto'] },
-  { label: 'Tronco', areas: ['Peitoral', 'Clavícula', 'Costela', 'Abdômen', 'Costas', 'Lombar'] },
-  { label: 'Braços', areas: ['Ombro', 'Braço', 'Antebraço', 'Cotovelo', 'Pulso', 'Mão', 'Dedos'] },
-  { label: 'Pernas', areas: ['Quadril', 'Coxa', 'Joelho', 'Canela', 'Panturrilha', 'Tornozelo', 'Pé'] },
+  { labelKey: 'projects.form.bodyAreaGroups.head', areas: ['Cabeça', 'Nuca', 'Pescoço', 'Rosto'] },
+  { labelKey: 'projects.form.bodyAreaGroups.torso', areas: ['Peitoral', 'Clavícula', 'Costela', 'Abdômen', 'Costas', 'Lombar'] },
+  { labelKey: 'projects.form.bodyAreaGroups.arms', areas: ['Ombro', 'Braço', 'Antebraço', 'Cotovelo', 'Pulso', 'Mão', 'Dedos'] },
+  { labelKey: 'projects.form.bodyAreaGroups.legs', areas: ['Quadril', 'Coxa', 'Joelho', 'Canela', 'Panturrilha', 'Tornozelo', 'Pé'] },
 ]
 
 export default function ProjectForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
   const [searchParams] = useSearchParams()
@@ -105,8 +109,8 @@ export default function ProjectForm() {
 
   function validate() {
     const errs = {}
-    if (!form.client_id) errs.client_id = 'Selecione um cliente'
-    if (!form.nome.trim()) errs.nome = 'Informe o nome do projeto'
+    if (!form.client_id) errs.client_id = t('projects.form.clientRequired')
+    if (!form.nome.trim()) errs.nome = t('projects.form.nameRequired')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -170,21 +174,21 @@ export default function ProjectForm() {
   return (
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
-      <PageHeader title={isEditing ? 'Editar Projeto' : 'Novo Projeto'} />
+      <PageHeader title={isEditing ? t('projects.form.editTitle') : t('projects.form.newTitle')} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         {/* Client + name + body area */}
         <Card className="p-4 flex flex-col gap-4">
           <div>
             <label className="text-xs font-medium text-muted uppercase tracking-wide block mb-1">
-              Cliente *
+              {t('projects.form.client')}
             </label>
             <div className="relative">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
               <input
                 ref={clientSearchRef}
                 type="text"
-                placeholder="Buscar cliente..."
+                placeholder={t('projects.form.searchClientPlaceholder')}
                 value={showClientList || !selectedClient ? clientSearch : selectedClient.nome}
                 autoComplete="off"
                 onFocus={() => { setClientSearch(''); setShowClientList(true) }}
@@ -198,7 +202,7 @@ export default function ProjectForm() {
               {showClientList && (
                 <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-[#1E1E1E] border border-[#333] rounded-lg overflow-hidden shadow-lg max-h-48 overflow-y-auto">
                   {filteredClients.length === 0 ? (
-                    <p className="px-3 py-2.5 text-sm text-muted">Nenhum cliente encontrado</p>
+                    <p className="px-3 py-2.5 text-sm text-muted">{t('clients.list.emptySearch')}</p>
                   ) : (
                     filteredClients.map((c) => (
                       <button
@@ -222,19 +226,19 @@ export default function ProjectForm() {
           </div>
 
           <Input
-            label="Nome do projeto *"
-            placeholder="Ex: Manga completa, Costas..."
+            label={t('projects.form.name')}
+            placeholder={t('projects.form.namePlaceholder')}
             value={form.nome}
             onChange={(e) => handleChange('nome', e.target.value)}
             error={errors.nome}
           />
 
           <div>
-            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">Área do corpo</p>
+            <p className="text-xs font-medium text-muted uppercase tracking-wide mb-2">{t('projects.form.bodyArea')}</p>
             <div className="flex flex-col gap-3">
-              {BODY_AREA_GROUPS.map(({ label, areas }) => (
-                <div key={label}>
-                  <p className="text-xs text-muted mb-1.5">{label}</p>
+              {BODY_AREA_GROUPS.map(({ labelKey, areas }) => (
+                <div key={labelKey}>
+                  <p className="text-xs text-muted mb-1.5">{t(labelKey)}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {areas.map((area) => (
                       <Chip
@@ -259,11 +263,11 @@ export default function ProjectForm() {
         {/* Billing type + totals */}
         <Card className="p-4 flex flex-col gap-4">
           <div>
-            <p className="text-xs text-muted uppercase tracking-wide mb-2">Tipo de cobrança</p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('projects.form.billingType')}</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { key: 'por_sessao', label: 'Por sessão', desc: 'Cada sessão é uma transação' },
-                { key: 'fechado', label: 'Fechado', desc: 'Valor total combinado' },
+                { key: 'por_sessao', label: t('projects.billingType.perSession'), desc: t('projects.form.billingOptions.perSessionDesc') },
+                { key: 'fechado', label: t('projects.billingType.closed'), desc: t('projects.form.billingOptions.closedDesc') },
               ].map(({ key, label, desc }) => (
                 <button
                   type="button"
@@ -287,18 +291,18 @@ export default function ProjectForm() {
           <div className="grid grid-cols-2 gap-3">
             {form.tipo_cobranca === 'fechado' && (
               <Input
-                label="Valor total (R$)"
+                label={t('projects.form.totalValue')}
                 type="number"
                 step="0.01"
-                placeholder="0,00"
+                placeholder={t('projects.form.valuePlaceholder')}
                 value={form.valor_total}
                 onChange={(e) => handleChange('valor_total', e.target.value)}
               />
             )}
             <Input
-              label="Sessões estimadas"
+              label={t('projects.form.estimatedSessions')}
               type="number"
-              placeholder="Ex: 3"
+              placeholder={t('projects.form.estimatedSessionsPlaceholder')}
               value={form.sessoes_estimadas}
               onChange={(e) => handleChange('sessoes_estimadas', e.target.value)}
             />
@@ -308,31 +312,31 @@ export default function ProjectForm() {
         {/* Payment — only for new fechado projects */}
         {!isEditing && form.tipo_cobranca === 'fechado' && (
           <Card className="p-4 flex flex-col gap-3">
-            <p className="text-xs text-muted uppercase tracking-wide">Pagamento recebido</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('projects.form.paymentReceived')}</p>
 
             {/* First payment */}
             <div className="flex gap-2 flex-wrap">
-              {PAYMENT_METHODS.map(({ key, label }) => (
+              {PAYMENT_METHODS.map(({ key, labelKey }) => (
                 <Chip
                   key={key}
                   active={payForma === key}
                   onClick={() => setPayForma(key)}
                 >
-                  {label}
+                  {t(labelKey)}
                 </Chip>
               ))}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Valor (R$)"
+                label={t('projects.paymentValueLabel')}
                 type="number"
                 step="0.01"
-                placeholder="0,00"
+                placeholder={t('projects.form.valuePlaceholder')}
                 value={payValor}
                 onChange={(e) => setPayValor(e.target.value)}
               />
               <Input
-                label="Data"
+                label={t('projects.paymentDateLabel')}
                 type="date"
                 value={payDate}
                 onChange={(e) => setPayDate(e.target.value)}
@@ -343,7 +347,7 @@ export default function ProjectForm() {
             {pay2Enabled ? (
               <div className="flex flex-col gap-3 pt-1 border-t border-[#2A2A2A]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted uppercase tracking-wide">Segunda forma</span>
+                  <span className="text-xs text-muted uppercase tracking-wide">{t('projects.form.secondMethod')}</span>
                   <button
                     type="button"
                     onClick={() => { setPay2Enabled(false); setPay2Valor('') }}
@@ -353,27 +357,27 @@ export default function ProjectForm() {
                   </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, label }) => (
+                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, labelKey }) => (
                     <Chip
                       key={key}
                       active={pay2Forma === key}
                       onClick={() => setPay2Forma(key)}
                     >
-                      {label}
+                      {t(labelKey)}
                     </Chip>
                   ))}
                 </div>
                 <Input
-                  label="Valor (R$)"
+                  label={t('projects.paymentValueLabel')}
                   type="number"
                   step="0.01"
-                  placeholder="0,00"
+                  placeholder={t('projects.form.valuePlaceholder')}
                   value={pay2Valor}
                   onChange={(e) => setPay2Valor(e.target.value)}
                 />
                 {payValor && pay2Valor && (
                   <p className="text-xs text-muted">
-                    Total: R$ {(parseFloat(payValor) + parseFloat(pay2Valor)).toFixed(2)}
+                    {t('projects.form.total')} R$ {(parseFloat(payValor) + parseFloat(pay2Valor)).toFixed(2)}
                   </p>
                 )}
               </div>
@@ -383,11 +387,11 @@ export default function ProjectForm() {
                 onClick={() => setPay2Enabled(true)}
                 className="text-xs text-primary text-left hover:opacity-80 transition-opacity"
               >
-                + Dividir em outra forma de pagamento
+                {t('projects.form.splitPayment')}
               </button>
             )}
 
-            <p className="text-xs text-muted">Deixe em branco se ainda não recebeu</p>
+            <p className="text-xs text-muted">{t('projects.form.blankIfNotReceived')}</p>
           </Card>
         )}
 
@@ -396,7 +400,7 @@ export default function ProjectForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          {isEditing ? 'Salvar alterações' : 'Criar Projeto'}
+          {isEditing ? t('projects.form.saveEdit') : t('projects.form.createProject')}
         </Button>
       </form>
     </div>

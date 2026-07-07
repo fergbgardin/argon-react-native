@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Users, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { clientsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import Card from '../../components/ui/Card'
@@ -11,6 +12,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientList() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const { data: clients, loading } = useData(() => clientsApi.list())
@@ -29,7 +31,7 @@ export default function ClientList() {
         className="sticky top-0 z-30 glass-header flex items-center justify-between px-4 pb-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
-        <h1 className="text-2xl font-bold text-white">Clientes</h1>
+        <h1 className="text-2xl font-bold text-white">{t('clients.title')}</h1>
         <Button size="icon" onClick={() => navigate('/clientes/novo')}>
           <Plus size={18} />
         </Button>
@@ -40,7 +42,7 @@ export default function ClientList() {
         <Input
           type="text"
           icon={Search}
-          placeholder="Buscar por nome ou WhatsApp..."
+          placeholder={t('clients.list.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -50,12 +52,12 @@ export default function ClientList() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={Users}
-            title={search ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
-            description={!search ? 'Cadastre seu primeiro cliente.' : undefined}
+            title={search ? t('clients.list.emptySearch') : t('clients.list.emptyTitle')}
+            description={!search ? t('clients.list.emptyDescription') : undefined}
             action={
               !search && (
                 <Button onClick={() => navigate('/clientes/novo')}>
-                  <Plus size={16} /> Novo Cliente
+                  <Plus size={16} /> {t('clients.list.newClient')}
                 </Button>
               )
             }

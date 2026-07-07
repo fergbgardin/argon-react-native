@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 function GoogleIcon() {
   return (
@@ -14,6 +15,7 @@ function GoogleIcon() {
 }
 
 export default function Login() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
 
   async function handleGoogle() {
@@ -32,7 +34,7 @@ export default function Login() {
             <span className="text-3xl">🖋️</span>
           </div>
           <h1 className="text-2xl font-bold text-white">InkManager</h1>
-          <p className="text-sm text-muted text-center">Gestão para tatuadores</p>
+          <p className="text-sm text-muted text-center">{t('login.tagline')}</p>
         </div>
 
         <div className="w-full flex flex-col gap-3">
@@ -46,12 +48,12 @@ export default function Login() {
             ) : (
               <GoogleIcon />
             )}
-            Entrar com Google
+            {t('login.googleButton')}
           </button>
         </div>
 
         <p className="text-xs text-muted text-center">
-          Ao entrar você concorda com o uso desta plataforma para fins de teste.
+          {t('login.disclaimer')}
         </p>
       </div>
     </div>

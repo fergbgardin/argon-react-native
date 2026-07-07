@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { studiosApi } from '../../lib/api'
 import PageHeader from '../../components/ui/PageHeader'
 import Input from '../../components/ui/Input'
@@ -11,6 +12,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function StudioForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
   const isEditing = !!id
@@ -49,8 +51,8 @@ export default function StudioForm() {
 
   function validate() {
     const errs = {}
-    if (!form.nome.trim()) errs.nome = 'Nome obrigatório'
-    if (!form.valor_padrao) errs.valor_padrao = 'Informe o valor'
+    if (!form.nome.trim()) errs.nome = t('studios.form.nameRequired')
+    if (!form.valor_padrao) errs.valor_padrao = t('studios.form.valueRequired')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -90,7 +92,7 @@ export default function StudioForm() {
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
       <PageHeader
-        title={isEditing ? 'Editar Estúdio' : 'Novo Estúdio'}
+        title={isEditing ? t('studios.form.editTitle') : t('studios.form.newTitle')}
         actions={
           isEditing && (
             <Button variant="ghost" size="icon" onClick={() => setDeleteModal(true)}>
@@ -103,26 +105,26 @@ export default function StudioForm() {
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
           <Input
-            label="Nome *"
-            placeholder="Nome do estúdio"
+            label={t('studios.form.name')}
+            placeholder={t('studios.form.namePlaceholder')}
             value={form.nome}
             onChange={(e) => handleChange('nome', e.target.value)}
             error={errors.nome}
           />
           <Input
-            label="Endereço / Cidade"
-            placeholder="Ex: Rua das Flores, 123 — São Paulo"
+            label={t('studios.form.address')}
+            placeholder={t('studios.form.addressPlaceholder')}
             value={form.local}
             onChange={(e) => handleChange('local', e.target.value)}
           />
         </Card>
 
         <Card className="p-4 flex flex-col gap-4">
-          <p className="text-xs text-muted uppercase tracking-wide">Tipo de cobrança</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('studios.form.billingType')}</p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { key: 'porcentagem', label: 'Porcentagem', desc: 'Ex: 30% do total' },
-              { key: 'fixo', label: 'Valor fixo', desc: 'Ex: R$ 150 por sessão' },
+              { key: 'porcentagem', label: t('studios.form.percentage'), desc: t('studios.form.percentageDesc') },
+              { key: 'fixo', label: t('studios.form.fixed'), desc: t('studios.form.fixedDesc') },
             ].map(({ key, label, desc }) => (
               <button
                 type="button"
@@ -143,10 +145,10 @@ export default function StudioForm() {
           </div>
 
           <Input
-            label={form.tipo_cobranca === 'porcentagem' ? 'Porcentagem (%)' : 'Valor fixo (R$)'}
+            label={form.tipo_cobranca === 'porcentagem' ? t('studios.form.percentageValue') : t('studios.form.fixedValue')}
             type="number"
             step={form.tipo_cobranca === 'porcentagem' ? '1' : '0.01'}
-            placeholder={form.tipo_cobranca === 'porcentagem' ? 'Ex: 30' : 'Ex: 150,00'}
+            placeholder={form.tipo_cobranca === 'porcentagem' ? t('studios.form.percentagePlaceholder') : t('studios.form.fixedPlaceholder')}
             value={form.valor_padrao}
             onChange={(e) => handleChange('valor_padrao', e.target.value)}
             error={errors.valor_padrao}
@@ -157,8 +159,8 @@ export default function StudioForm() {
         <Card className="p-4">
           <label className="flex items-center justify-between cursor-pointer">
             <div>
-              <p className="text-sm font-medium text-white">Estúdio favorito</p>
-              <p className="text-xs text-muted">Pré-selecionado em novas sessões</p>
+              <p className="text-sm font-medium text-white">{t('studios.form.favoriteTitle')}</p>
+              <p className="text-xs text-muted">{t('studios.form.favoriteHint')}</p>
             </div>
             <button
               type="button"
@@ -181,20 +183,20 @@ export default function StudioForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          {isEditing ? 'Salvar alterações' : 'Salvar Estúdio'}
+          {isEditing ? t('studios.form.saveEdit') : t('studios.form.saveNew')}
         </Button>
       </form>
 
-      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir estúdio">
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title={t('studios.form.deleteTitle')}>
         <p className="text-sm text-muted mb-4">
-          Tem certeza? As sessões vinculadas a este estúdio ficarão sem estúdio, mas não serão excluídas.
+          {t('studios.form.deleteConfirm')}
         </p>
         <div className="flex gap-3">
           <Button variant="outline" full onClick={() => setDeleteModal(false)}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" full onClick={handleDelete}>
-            Excluir
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>

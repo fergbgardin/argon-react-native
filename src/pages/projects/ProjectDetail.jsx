@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Edit, Trash2, AlertTriangle, ExternalLink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { projectsApi, sessionsApi, projectPaymentsApi } from '../../lib/api'
 import { formatDate, formatCurrency, whatsappLink } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -13,22 +14,22 @@ import Modal from '../../components/ui/Modal'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
-const statusConfig = {
-  ativo: { label: 'Ativo', variant: 'success' },
-  concluido: { label: 'Concluído', variant: 'default' },
-  pausado: { label: 'Pausado', variant: 'warning' },
-}
-
 const PAYMENT_METHODS = [
-  { key: 'pix', label: 'PIX' },
-  { key: 'credito', label: 'Crédito' },
-  { key: 'debito', label: 'Débito' },
-  { key: 'dinheiro', label: 'Dinheiro' },
+  { key: 'pix', labelKey: 'common.paymentMethods.pix' },
+  { key: 'credito', labelKey: 'common.paymentMethods.credito' },
+  { key: 'debito', labelKey: 'common.paymentMethods.debito' },
+  { key: 'dinheiro', labelKey: 'common.paymentMethods.dinheiro' },
 ]
 
 export default function ProjectDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
+  const statusConfig = {
+    ativo: { label: t('common.projectStatus.active'), variant: 'success' },
+    concluido: { label: t('common.projectStatus.completed'), variant: 'default' },
+    pausado: { label: t('common.projectStatus.paused'), variant: 'warning' },
+  }
   const [deleteModal, setDeleteModal] = useState(false)
   const [blockedModal, setBlockedModal] = useState(false)
   const [payForma, setPayForma] = useState('pix')
@@ -45,8 +46,8 @@ export default function ProjectDetail() {
   if (pLoading || sLoading || ppLoading) return <LoadingSpinner fullPage />
   if (!pLoading && !project) return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-      <p className="text-muted">Projeto não encontrado</p>
-      <button onClick={() => navigate('/projetos')} className="text-primary text-sm">← Voltar para projetos</button>
+      <p className="text-muted">{t('projects.detail.notFound')}</p>
+      <button onClick={() => navigate('/projetos')} className="text-primary text-sm">{t('projects.detail.backToProjects')}</button>
     </div>
   )
 
@@ -133,7 +134,7 @@ export default function ProjectDetail() {
           <div className="flex items-center justify-between">
             <Badge variant={cfg.variant}>{cfg.label}</Badge>
             <span className="text-xs text-muted">
-              {isFechado ? 'Projeto fechado' : 'Cobrança por sessão'}
+              {isFechado ? t('projects.detail.closedProject') : t('projects.detail.perSessionBilling')}
             </span>
           </div>
 
@@ -146,7 +147,7 @@ export default function ProjectDetail() {
 
           {project.area_corpo && (
             <div className="flex justify-between text-sm">
-              <span className="text-muted">Área</span>
+              <span className="text-muted">{t('projects.detail.area')}</span>
               <span className="text-white">{project.area_corpo}</span>
             </div>
           )}
@@ -159,7 +160,7 @@ export default function ProjectDetail() {
               className="flex items-center gap-2 text-sm text-green-400"
             >
               <ExternalLink size={14} />
-              WhatsApp: {client.whatsapp}
+              {t('projects.detail.whatsapp', { phone: client.whatsapp })}
             </a>
           )}
         </Card>
@@ -167,9 +168,11 @@ export default function ProjectDetail() {
         {/* Progress */}
         <Card className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-muted uppercase tracking-wide">Progresso</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('projects.detail.progress')}</p>
             <p className="text-sm text-white">
-              {sessoesFeitas}{sessoesEstimadas > 0 ? `/${sessoesEstimadas}` : ''} sessão(ões)
+              {sessoesEstimadas > 0
+                ? t('projects.sessionsCountOf', { done: sessoesFeitas, estimated: sessoesEstimadas })
+                : t('projects.sessionsCount', { done: sessoesFeitas })}
             </p>
           </div>
           {sessoesEstimadas > 0 && (
@@ -185,23 +188,23 @@ export default function ProjectDetail() {
         {/* Financial summary */}
         {(project.valor_total || totalRecebido > 0) && (
           <Card className="p-4">
-            <p className="text-xs text-muted uppercase tracking-wide mb-3">Financeiro</p>
+            <p className="text-xs text-muted uppercase tracking-wide mb-3">{t('projects.detail.financial')}</p>
             <div className="flex flex-col gap-2">
               {project.valor_total && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted">
-                    {isFechado ? 'Valor combinado' : 'Estimativa'}
+                    {isFechado ? t('projects.detail.combinedValue') : t('projects.detail.estimate')}
                   </span>
                   <span className="text-white">{formatCurrency(project.valor_total)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-muted">Recebido</span>
+                <span className="text-muted">{t('projects.detail.received')}</span>
                 <span className="text-green-400">{formatCurrency(totalRecebido)}</span>
               </div>
               {saldoDevedor !== null && saldoDevedor > 0 && (
                 <div className="flex justify-between text-sm border-t border-[#2A2A2A] pt-2 mt-1">
-                  <span className="text-muted">Saldo restante</span>
+                  <span className="text-muted">{t('projects.detail.remainingBalance')}</span>
                   <span className="text-amber-400">{formatCurrency(saldoDevedor)}</span>
                 </div>
               )}
@@ -212,7 +215,7 @@ export default function ProjectDetail() {
         {/* Payment management — only for fechado projects */}
         {isFechado && (
           <Card className="p-4 flex flex-col gap-3">
-            <p className="text-xs text-muted uppercase tracking-wide">Pagamentos recebidos</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('projects.detail.paymentsReceived')}</p>
 
             {/* Existing payments */}
             {(projectPayments || []).length > 0 && (
@@ -221,7 +224,10 @@ export default function ProjectDetail() {
                   <div key={p.id} className="flex items-center justify-between py-2 border-b border-[#2A2A2A] last:border-0">
                     <div>
                       <p className="text-sm text-white">
-                        {PAYMENT_METHODS.find((m) => m.key === p.forma)?.label || p.forma}
+                        {(() => {
+                          const m = PAYMENT_METHODS.find((m) => m.key === p.forma)
+                          return m ? t(m.labelKey) : p.forma
+                        })()}
                       </p>
                       <p className="text-xs text-muted">{formatDate(p.data_pagamento)}</p>
                     </div>
@@ -242,30 +248,30 @@ export default function ProjectDetail() {
             {/* Add payment form */}
             <div className="flex flex-col gap-3 pt-1">
               <div className="flex gap-2 flex-wrap">
-                {PAYMENT_METHODS.map(({ key, label }) => (
+                {PAYMENT_METHODS.map(({ key, labelKey }) => (
                   <Chip
                     key={key}
                     active={payForma === key}
                     onClick={() => setPayForma(key)}
                   >
-                    {label}
+                    {t(labelKey)}
                   </Chip>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted uppercase tracking-wide">Valor (R$)</label>
+                  <label className="text-xs text-muted uppercase tracking-wide">{t('projects.paymentValueLabel')}</label>
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="0,00"
+                    placeholder={t('projects.form.valuePlaceholder')}
                     value={payValor}
                     onChange={(e) => setPayValor(e.target.value)}
                     className="w-full bg-[#2A2A2A] border border-[#333] rounded-lg px-3 py-2.5 text-white text-sm placeholder-[#555] outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-muted uppercase tracking-wide">Data</label>
+                  <label className="text-xs text-muted uppercase tracking-wide">{t('projects.paymentDateLabel')}</label>
                   <input
                     type="date"
                     value={payDate}
@@ -281,7 +287,7 @@ export default function ProjectDetail() {
                 onClick={handleAddPayment}
                 disabled={!payValor || parseFloat(payValor) <= 0}
               >
-                <Plus size={16} /> Registrar pagamento
+                <Plus size={16} /> {t('projects.detail.registerPayment')}
               </Button>
             </div>
           </Card>
@@ -290,20 +296,20 @@ export default function ProjectDetail() {
         {/* Sessions */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-muted uppercase tracking-wide">Sessões</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('projects.detail.sessionsTitle')}</p>
             <Button
               size="sm"
               variant="secondary"
               className="border border-primary/40 text-primary"
               onClick={() => navigate(`/sessoes/nova?project_id=${id}`)}
             >
-              <Plus size={14} /> Nova sessão
+              <Plus size={14} /> {t('projects.detail.newSession')}
             </Button>
           </div>
 
           <div className="flex flex-col gap-2">
             {(sessions || []).length === 0 ? (
-              <p className="text-sm text-muted text-center py-4">Nenhuma sessão registrada</p>
+              <p className="text-sm text-muted text-center py-4">{t('projects.detail.noSessions')}</p>
             ) : (
               (sessions || []).map((s) => (
                 <Card
@@ -313,13 +319,13 @@ export default function ProjectDetail() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-white">Sessão {sessionNumberMap[s.id]}</p>
+                      <p className="text-sm text-white">{t('projects.detail.sessionNumber', { number: sessionNumberMap[s.id] })}</p>
                       <p className="text-xs text-muted">
                         {formatDate(s.data_sessao)}{s.studios?.nome ? ` · ${s.studios.nome}` : ''}
                       </p>
                     </div>
                     <Badge variant={s.status === 'concluida' ? 'success' : 'warning'}>
-                      {s.status === 'concluida' ? 'Concluída' : 'Agendada'}
+                      {s.status === 'concluida' ? t('common.sessionStatus.completed') : t('common.sessionStatus.scheduled')}
                     </Badge>
                   </div>
                 </Card>
@@ -333,7 +339,7 @@ export default function ProjectDetail() {
           <div className="pb-6">
             <div className="flex gap-2">
               <Button variant="outline" full onClick={() => handleStatusChange('pausado')}>
-                Pausar
+                {t('projects.detail.pause')}
               </Button>
               <Button
                 variant="secondary"
@@ -341,40 +347,40 @@ export default function ProjectDetail() {
                 disabled={(sessions || []).length === 0}
                 onClick={() => handleStatusChange('concluido')}
               >
-                Concluir
+                {t('projects.detail.complete')}
               </Button>
             </div>
             {(sessions || []).length === 0 && (
               <p className="text-xs text-muted mt-2 text-center">
-                Adicione ao menos uma sessão para concluir o projeto.
+                {t('projects.detail.needSessionToComplete')}
               </p>
             )}
           </div>
         )}
       </div>
 
-      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir projeto">
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title={t('projects.detail.deleteTitle')}>
         <p className="text-sm text-muted mb-4">
-          Tem certeza? Esta ação não pode ser desfeita.
+          {t('projects.detail.deleteConfirm')}
         </p>
         <div className="flex gap-3">
           <Button variant="outline" full onClick={() => setDeleteModal(false)}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" full onClick={handleDelete}>
-            Excluir
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>
 
-      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title="Não é possível excluir">
+      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title={t('projects.detail.blockedTitle')}>
         <p className="text-sm text-muted mb-4">
           {(sessions || []).length === 1
-            ? 'Este projeto tem 1 sessão vinculada.'
-            : `Este projeto tem ${(sessions || []).length} sessões vinculadas.`}{' '}
-          Exclua as sessões antes de excluir o projeto.
+            ? t('projects.detail.blockedOne')
+            : t('projects.detail.blockedMany', { count: (sessions || []).length })}{' '}
+          {t('projects.detail.blockedSuffix')}
         </p>
-        <Button full onClick={() => setBlockedModal(false)}>Entendi</Button>
+        <Button full onClick={() => setBlockedModal(false)}>{t('projects.detail.gotIt')}</Button>
       </Modal>
     </div>
   )

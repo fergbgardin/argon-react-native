@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp, X, Camera, Building2, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { sessionsApi, projectsApi, studiosApi, sessionPaymentsApi, settingsApi, storageApi } from '../../lib/api'
 import { calcComissao } from '../../lib/utils'
 import PageHeader from '../../components/ui/PageHeader'
@@ -15,13 +16,14 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 const PAYMENT_METHODS = [
-  { key: 'pix', label: 'PIX' },
-  { key: 'credito', label: 'Crédito' },
-  { key: 'debito', label: 'Débito' },
-  { key: 'dinheiro', label: 'Dinheiro' },
+  { key: 'pix', labelKey: 'common.paymentMethods.pix' },
+  { key: 'credito', labelKey: 'common.paymentMethods.credito' },
+  { key: 'debito', labelKey: 'common.paymentMethods.debito' },
+  { key: 'dinheiro', labelKey: 'common.paymentMethods.dinheiro' },
 ]
 
 export default function SessionForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
   const [searchParams] = useSearchParams()
@@ -228,9 +230,9 @@ export default function SessionForm() {
 
   function validate() {
     const errs = {}
-    if (!form.project_id) errs.project_id = 'Selecione um projeto'
-    if (!form.studio_id) errs.studio_id = 'Selecione um estúdio'
-    if (!form.data_sessao) errs.data_sessao = 'Informe a data'
+    if (!form.project_id) errs.project_id = t('sessions.form.projectRequired')
+    if (!form.studio_id) errs.studio_id = t('sessions.form.studioRequired')
+    if (!form.data_sessao) errs.data_sessao = t('sessions.form.dateRequired')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -267,7 +269,7 @@ export default function SessionForm() {
     if (isEditing || pays.length > 0) {
       const { error: payError } = await sessionPaymentsApi.upsertForSession(sessionId, pays)
       if (payError) {
-        setErrors({ submit: `Sessão salva, mas o pagamento falhou: ${payError.message}` })
+        setErrors({ submit: t('sessions.form.paymentSavedFailed', { reason: payError.message }) })
         setLoading(false)
         return
       }
@@ -276,7 +278,7 @@ export default function SessionForm() {
     if (anamneseFile) {
       const { url, error: upError } = await storageApi.uploadAnamnese(anamneseFile, sessionId)
       if (upError || !url) {
-        setErrors({ submit: `Sessão salva, mas a foto falhou: ${upError?.message || 'verifique se o bucket "inkmanager" existe no Supabase Storage.'}` })
+        setErrors({ submit: t('sessions.form.photoSavedFailed', { reason: upError?.message || t('sessions.form.photoFallbackReason') }) })
         setLoading(false)
         return
       }
@@ -292,14 +294,14 @@ export default function SessionForm() {
     return (
       <div className="relative min-h-screen bg-bg pb-nav">
         <AmbientGlow />
-        <PageHeader title="Nova Sessão" />
+        <PageHeader title={t('sessions.form.newTitle')} />
         <EmptyState
           icon={Building2}
-          title="Cadastre um estúdio primeiro"
-          description="Toda sessão precisa estar vinculada a um estúdio. Cadastre pelo menos um antes de criar sessões."
+          title={t('sessions.form.noStudiosTitle')}
+          description={t('sessions.form.noStudiosDescription')}
           action={
             <Button onClick={() => navigate('/studios/novo')}>
-              <Plus size={16} /> Cadastrar Estúdio
+              <Plus size={16} /> {t('sessions.form.registerStudio')}
             </Button>
           }
         />
@@ -315,18 +317,18 @@ export default function SessionForm() {
   return (
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
-      <PageHeader title={isEditing ? 'Editar Sessão' : 'Nova Sessão'} />
+      <PageHeader title={isEditing ? t('sessions.form.editTitle') : t('sessions.form.newTitle')} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         {/* Essentials */}
         <Card className="p-4 flex flex-col gap-4">
           <Select
-            label="Projeto / Cliente *"
+            label={t('sessions.form.projectClient')}
             value={form.project_id}
             onChange={(e) => handleChange('project_id', e.target.value)}
             error={errors.project_id}
           >
-            <option value="">Selecionar projeto...</option>
+            <option value="">{t('sessions.form.selectProject')}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.clients?.nome} — {p.nome}
@@ -334,21 +336,21 @@ export default function SessionForm() {
             ))}
           </Select>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             <Input
-              label="Data *"
+              label={t('sessions.form.date')}
               type="date"
               value={form.data_sessao}
               onChange={(e) => handleChange('data_sessao', e.target.value)}
               error={errors.data_sessao}
             />
             <Select
-              label="Status"
+              label={t('sessions.form.status')}
               value={form.status}
               onChange={(e) => handleChange('status', e.target.value)}
             >
-              <option value="agendada">Agendada</option>
-              <option value="concluida">Concluída</option>
+              <option value="agendada">{t('common.sessionStatus.scheduled')}</option>
+              <option value="concluida">{t('common.sessionStatus.completed')}</option>
             </Select>
           </div>
         </Card>
@@ -356,17 +358,17 @@ export default function SessionForm() {
         {/* Payment — always visible for por_sessao, optional */}
         {selectedProject?.tipo_cobranca !== 'fechado' && (
           <Card className="p-4 flex flex-col gap-3">
-            <p className="text-xs text-muted uppercase tracking-wide">Pagamento</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.form.payment')}</p>
 
             <div className="flex gap-2 flex-wrap">
-              {PAYMENT_METHODS.map(({ key, label }) => (
+              {PAYMENT_METHODS.map(({ key, labelKey }) => (
                 <Chip key={key} active={payForma === key} onClick={() => setPayForma(key)}>
-                  {label}
+                  {t(labelKey)}
                 </Chip>
               ))}
             </div>
             <Input
-              label="Valor (R$)"
+              label={t('sessions.form.valueLabel')}
               type="number"
               step="0.01"
               placeholder="0,00"
@@ -377,7 +379,7 @@ export default function SessionForm() {
             {pay2Enabled ? (
               <div className="flex flex-col gap-3 pt-1 border-t border-[#2A2A2A]">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted uppercase tracking-wide">Segunda forma</span>
+                  <span className="text-xs text-muted uppercase tracking-wide">{t('sessions.form.secondMethod')}</span>
                   <button
                     type="button"
                     onClick={() => { setPay2Enabled(false); setPay2Valor('') }}
@@ -387,14 +389,14 @@ export default function SessionForm() {
                   </button>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, label }) => (
+                  {PAYMENT_METHODS.filter((m) => m.key !== payForma).map(({ key, labelKey }) => (
                     <Chip key={key} active={pay2Forma === key} onClick={() => setPay2Forma(key)}>
-                      {label}
+                      {t(labelKey)}
                     </Chip>
                   ))}
                 </div>
                 <Input
-                  label="Valor (R$)"
+                  label={t('sessions.form.valueLabel')}
                   type="number"
                   step="0.01"
                   placeholder="0,00"
@@ -403,7 +405,7 @@ export default function SessionForm() {
                 />
                 {payValor && pay2Valor && (
                   <p className="text-xs text-muted">
-                    Total: R$ {((parseFloat(payValor) || 0) + (parseFloat(pay2Valor) || 0)).toFixed(2)}
+                    {t('sessions.form.total', { value: ((parseFloat(payValor) || 0) + (parseFloat(pay2Valor) || 0)).toFixed(2) })}
                   </p>
                 )}
               </div>
@@ -413,11 +415,11 @@ export default function SessionForm() {
                 onClick={() => setPay2Enabled(true)}
                 className="text-xs text-primary text-left hover:opacity-80 transition-opacity"
               >
-                + Dividir em outra forma de pagamento
+                {t('sessions.form.splitPayment')}
               </button>
             )}
 
-            <p className="text-xs text-muted">Deixe em branco se ainda não recebeu</p>
+            <p className="text-xs text-muted">{t('sessions.form.blankIfNotReceived')}</p>
           </Card>
         )}
 
@@ -426,21 +428,21 @@ export default function SessionForm() {
         <>
           {/* Material cost */}
           <Card className="p-4 flex flex-col gap-3">
-              <p className="text-xs text-muted uppercase tracking-wide">Custo de Material</p>
+              <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.form.materialCostTitle')}</p>
               <Select
-                label="Tamanho"
+                label={t('sessions.form.materialSize')}
                 value={form.custo_material}
                 onChange={(e) => handleMaterialSelect(e.target.value)}
               >
-                <option value="">Selecionar...</option>
-                <option value="pequena">Pequena — R$ {getMaterialValue('pequena')}</option>
-                <option value="media">Média — R$ {getMaterialValue('media')}</option>
-                <option value="grande">Grande — R$ {getMaterialValue('grande')}</option>
-                <option value="outro">Outro (valor específico)</option>
+                <option value="">{t('sessions.form.selectPlaceholder')}</option>
+                <option value="pequena">{t('sessions.form.materialSmall', { value: getMaterialValue('pequena') })}</option>
+                <option value="media">{t('sessions.form.materialMedium', { value: getMaterialValue('media') })}</option>
+                <option value="grande">{t('sessions.form.materialLarge', { value: getMaterialValue('grande') })}</option>
+                <option value="outro">{t('sessions.form.materialOther')}</option>
               </Select>
               {form.custo_material && (
                 <Input
-                  label={form.custo_material === 'outro' ? 'Valor específico (R$)' : 'Valor (editável)'}
+                  label={form.custo_material === 'outro' ? t('sessions.form.materialOtherValue') : t('sessions.form.materialEditableValue')}
                   type="number"
                   step="0.01"
                   placeholder="0,00"
@@ -453,29 +455,29 @@ export default function SessionForm() {
             {/* For fechado: ask session value to calculate commission */}
             {selectedProject?.tipo_cobranca === 'fechado' && (
               <Card className="p-4 flex flex-col gap-2">
-                <p className="text-xs text-muted uppercase tracking-wide">Valor desta sessão</p>
+                <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.form.closedSessionValueTitle')}</p>
                 <Input
-                  label="Valor (R$)"
+                  label={t('sessions.form.valueLabel')}
                   type="number"
                   step="0.01"
                   placeholder="0,00"
                   value={sessionValorFechado}
                   onChange={(e) => setSessionValorFechado(e.target.value)}
-                  hint="Usado para calcular a comissão do estúdio"
+                  hint={t('sessions.form.closedSessionValueHint')}
                 />
               </Card>
             )}
 
             {/* Commission — studio dropdown drives the snapshot value */}
             <Card className="p-4 flex flex-col gap-3">
-              <p className="text-xs text-muted uppercase tracking-wide">Comissão do Estúdio</p>
+              <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.form.commissionTitle')}</p>
               <Select
-                label="Estúdio *"
+                label={t('sessions.form.studioLabel')}
                 value={form.studio_id}
                 onChange={(e) => handleStudioChange(e.target.value)}
                 error={errors.studio_id}
               >
-                <option value="">Selecionar estúdio...</option>
+                <option value="">{t('sessions.form.selectStudio')}</option>
                 {studios.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.nome} {s.is_favorite ? '★' : ''}
@@ -484,14 +486,16 @@ export default function SessionForm() {
               </Select>
               {selectedStudio && (
                 <p className="text-xs text-muted">
-                  Taxa: {selectedStudio.tipo_cobranca === 'porcentagem'
-                    ? `${selectedStudio.valor_padrao}%`
-                    : `R$ ${selectedStudio.valor_padrao} fixo`}
+                  {t('sessions.form.rate', {
+                    rate: selectedStudio.tipo_cobranca === 'porcentagem'
+                      ? `${selectedStudio.valor_padrao}%`
+                      : t('sessions.form.rateFixed', { value: selectedStudio.valor_padrao }),
+                  })}
                 </p>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Valor (R$)"
+                  label={t('sessions.form.valueLabel')}
                   type="number"
                   step="0.01"
                   placeholder="0,00"
@@ -499,7 +503,7 @@ export default function SessionForm() {
                   onChange={(e) => handleComissaoValor(e.target.value)}
                 />
                 <Input
-                  label="Percentual (%)"
+                  label={t('sessions.form.percentage')}
                   type="number"
                   step="0.1"
                   placeholder="0"
@@ -508,7 +512,7 @@ export default function SessionForm() {
                 />
               </div>
               <p className="text-xs text-muted">
-                Puxado do estúdio e travado nesta sessão — edite o valor ou o percentual.
+                {t('sessions.form.commissionHint')}
               </p>
             </Card>
         </>
@@ -520,7 +524,7 @@ export default function SessionForm() {
             className="w-full p-4 flex items-center justify-between text-left"
             onClick={() => setTechExpanded(!techExpanded)}
           >
-            <span className="text-sm font-medium text-muted">Detalhes técnicos</span>
+            <span className="text-sm font-medium text-muted">{t('sessions.form.technicalDetails')}</span>
             {techExpanded ? (
               <ChevronUp size={16} className="text-muted" />
             ) : (
@@ -532,7 +536,7 @@ export default function SessionForm() {
             <div className="px-4 pb-4 flex flex-col gap-3 border-t border-[#2A2A2A] pt-3">
               {presets.length > 0 ? (
                 <div>
-                  <p className="text-xs text-muted uppercase tracking-wide mb-2">Agulhas</p>
+                  <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('sessions.form.needles')}</p>
                   <div className="flex flex-wrap gap-2">
                     {presets.map((p) => (
                       <Chip
@@ -548,8 +552,8 @@ export default function SessionForm() {
                 </div>
               ) : (
                 <Input
-                  label="Agulhas"
-                  placeholder="Ex: RL #5, RM #7"
+                  label={t('sessions.form.needles')}
+                  placeholder={t('sessions.form.needlesPlaceholder')}
                   value={form.agulhas}
                   onChange={(e) => handleChange('agulhas', e.target.value)}
                 />
@@ -562,14 +566,14 @@ export default function SessionForm() {
         {/* Anamnese photo */}
         <Card className="p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-muted uppercase tracking-wide">Anamnese</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('sessions.detail.anamnesis')}</p>
             <button
               type="button"
               className="flex items-center gap-1 text-xs text-primary"
               onClick={() => anamneseRef.current?.click()}
             >
               <Camera size={14} />
-              {anamnesePreview || existingAnamnese ? 'Trocar foto' : 'Adicionar foto'}
+              {anamnesePreview || existingAnamnese ? t('sessions.form.changePhoto') : t('sessions.form.addPhoto')}
             </button>
             <input
               ref={anamneseRef}
@@ -583,21 +587,21 @@ export default function SessionForm() {
           {(anamnesePreview || existingAnamnese) ? (
             <img
               src={anamnesePreview || existingAnamnese}
-              alt="Anamnese"
+              alt={t('sessions.detail.anamnesis')}
               className="w-full rounded-lg object-cover max-h-64"
             />
           ) : (
-            <p className="text-sm text-muted">Nenhuma foto adicionada</p>
+            <p className="text-sm text-muted">{t('sessions.form.noPhoto')}</p>
           )}
           {anamneseFile && (
-            <p className="text-xs text-muted">A foto será enviada ao salvar a sessão.</p>
+            <p className="text-xs text-muted">{t('sessions.form.photoWillUpload')}</p>
           )}
         </Card>
 
         {/* Notes */}
         <Textarea
-          label="Observações"
-          placeholder="Notas gerais, observações sobre o cliente..."
+          label={t('sessions.form.notes')}
+          placeholder={t('sessions.form.notesPlaceholder')}
           value={form.obs}
           onChange={(e) => handleChange('obs', e.target.value)}
         />
@@ -607,7 +611,7 @@ export default function SessionForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          Salvar Sessão
+          {t('sessions.form.save')}
         </Button>
       </form>
     </div>

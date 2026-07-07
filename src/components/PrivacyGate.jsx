@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { profilesApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
 import Button from './ui/Button'
 import LoadingSpinner from './ui/LoadingSpinner'
 
 export default function PrivacyGate({ user, children }) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [accepted, setAccepted] = useState(true)
   const [checkbox, setCheckbox] = useState(false)
@@ -34,7 +36,7 @@ export default function PrivacyGate({ user, children }) {
     const { error: saveError } = await profilesApi.acceptPrivacy(user.id)
     setSaving(false)
     if (saveError) {
-      setError('Não foi possível registrar seu aceite. Verifique sua conexão e tente novamente.')
+      setError(t('privacy.error'))
       return
     }
     setAccepted(true)
@@ -50,29 +52,26 @@ export default function PrivacyGate({ user, children }) {
       <div className="relative w-full max-w-lg glass-sheet rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="px-4 py-3 border-b border-white/5">
           <h2 className="text-base font-semibold text-white">
-            Aviso de Privacidade e Tratamento de Dados
+            {t('privacy.title')}
           </h2>
         </div>
 
         <div className="p-4 flex flex-col gap-4">
           <p className="text-sm text-muted whitespace-pre-line leading-relaxed">
-            Este aplicativo é uma ferramenta de gestão para tatuadores autônomos. Ao usá-lo, você
-            poderá cadastrar dados pessoais dos seus clientes, incluindo informações sensíveis
-            relacionadas à saúde (ex: alergias, condições de pele, contraindicações), conforme
-            necessário para o seu trabalho.
+            {t('privacy.intro')}
             {'\n\n'}
-            Você, como usuário e responsável pelo cadastro desses dados, declara estar ciente de que:
+            {t('privacy.declareIntro')}
           </p>
 
           <ul className="text-sm text-muted leading-relaxed list-disc pl-5 flex flex-col gap-1">
-            <li>É responsável por obter o consentimento dos seus clientes para o tratamento das informações que você inserir no sistema;</li>
-            <li>Os dados são armazenados de forma segura e isolada, acessíveis apenas pela sua conta;</li>
-            <li>O uso das informações deve se limitar à finalidade do seu trabalho como tatuador (histórico de projetos, cuidados pós-tatuagem, contato);</li>
-            <li>Você não deve inserir dados sensíveis de clientes sem justificativa ligada à prestação do serviço.</li>
+            <li>{t('privacy.bullets.consent')}</li>
+            <li>{t('privacy.bullets.storage')}</li>
+            <li>{t('privacy.bullets.purpose')}</li>
+            <li>{t('privacy.bullets.sensitive')}</li>
           </ul>
 
           <p className="text-sm text-muted leading-relaxed">
-            Este aviso está em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018).
+            {t('privacy.lgpd')}
           </p>
 
           <label className="flex items-start gap-3 pt-2 cursor-pointer select-none">
@@ -83,15 +82,14 @@ export default function PrivacyGate({ user, children }) {
               className="mt-0.5 w-4 h-4 shrink-0 accent-primary"
             />
             <span className="text-sm text-white leading-relaxed">
-              Li e estou de acordo com o tratamento de dados descrito acima, e assumo a
-              responsabilidade pelos dados de terceiros que inserir no sistema.
+              {t('privacy.checkboxLabel')}
             </span>
           </label>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
 
           <Button full disabled={!checkbox} loading={saving} onClick={handleAccept}>
-            Continuar
+            {t('privacy.continue')}
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { studiosApi, sessionsApi, studioPayoutsApi } from '../../lib/api'
 import { formatDate, formatCurrency } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -12,6 +13,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Modal from '../../components/ui/Modal'
 
 export default function StudioPayout() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [confirmModal, setConfirmModal] = useState(false)
@@ -43,34 +45,36 @@ export default function StudioPayout() {
   return (
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
-      <PageHeader title="Acerto de Contas" subtitle={studio?.nome} />
+      <PageHeader title={t('studios.payout.title')} subtitle={studio?.nome} />
 
       <div className="px-4 flex flex-col gap-4">
         {pendingSessions.length === 0 ? (
           <Card className="p-6 text-center">
             <CheckCircle2 size={32} className="text-green-400 mx-auto mb-3" />
-            <p className="text-white font-medium">Tudo em dia!</p>
-            <p className="text-sm text-muted mt-1">Nenhuma comissão pendente para este estúdio</p>
+            <p className="text-white font-medium">{t('studios.payout.allSettled')}</p>
+            <p className="text-sm text-muted mt-1">{t('studios.payout.noneNow')}</p>
           </Card>
         ) : (
           <>
             {/* Summary */}
             <Card className="p-4 border-amber-500/20">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-muted uppercase tracking-wide">Total a repassar</p>
+                <p className="text-xs text-muted uppercase tracking-wide">{t('studios.payout.totalToSettle')}</p>
                 <p className="text-xl font-bold text-amber-400">{formatCurrency(total)}</p>
               </div>
               <p className="text-xs text-muted">
-                {pendingSessions.length} sessão(ões) — regra:{' '}
-                {studio?.tipo_cobranca === 'porcentagem'
-                  ? `${studio?.valor_padrao}%`
-                  : formatCurrency(studio?.valor_padrao)}
+                {t('studios.payout.ruleSummary', {
+                  count: pendingSessions.length,
+                  rule: studio?.tipo_cobranca === 'porcentagem'
+                    ? `${studio?.valor_padrao}%`
+                    : formatCurrency(studio?.valor_padrao),
+                })}
               </p>
             </Card>
 
             {/* Session list */}
             <div>
-              <p className="text-xs text-muted uppercase tracking-wide mb-2">Sessões incluídas</p>
+              <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('studios.payout.includedSessions')}</p>
               <div className="flex flex-col gap-2">
                 {pendingSessions.map((s) => {
                   const totalSessao = (s.session_payments || []).reduce(
@@ -86,7 +90,7 @@ export default function StudioPayout() {
                           <p className="text-xs text-muted">{formatDate(s.data_sessao)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-muted">Total: {formatCurrency(totalSessao)}</p>
+                          <p className="text-xs text-muted">{t('studios.payout.total', { value: formatCurrency(totalSessao) })}</p>
                           <p className="text-sm font-semibold text-amber-400">
                             {formatCurrency(s.valor_comissao_estudio)}
                           </p>
@@ -99,26 +103,25 @@ export default function StudioPayout() {
             </div>
 
             <Button full onClick={() => setConfirmModal(true)} className="mb-6">
-              Dar Baixa — {formatCurrency(total)}
+              {t('studios.payout.settleButton', { value: formatCurrency(total) })}
             </Button>
           </>
         )}
       </div>
 
-      <Modal open={confirmModal} onClose={() => setConfirmModal(false)} title="Confirmar acerto">
+      <Modal open={confirmModal} onClose={() => setConfirmModal(false)} title={t('studios.payout.confirmTitle')}>
         <p className="text-sm text-muted mb-2">
-          Confirmar repasse de <strong className="text-white">{formatCurrency(total)}</strong> para{' '}
-          <strong className="text-white">{studio?.nome}</strong>?
+          {t('studios.payout.confirmText', { value: formatCurrency(total), studio: studio?.nome })}
         </p>
         <p className="text-xs text-muted mb-4">
-          {pendingSessions.length} sessão(ões) serão marcadas como pagas.
+          {t('studios.payout.confirmSessions', { count: pendingSessions.length })}
         </p>
         <div className="flex gap-3">
           <Button variant="outline" full onClick={() => setConfirmModal(false)}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button full loading={loading} onClick={handlePayout}>
-            Confirmar
+            {t('common.confirm')}
           </Button>
         </div>
       </Modal>

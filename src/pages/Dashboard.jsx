@@ -5,10 +5,10 @@ import {
   CalendarDays, Banknote, Settings as SettingsIcon
 } from 'lucide-react'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { useTranslation } from 'react-i18next'
 import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi, studiosApi, settingsApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
-import { formatCurrency, formatDate } from '../lib/utils'
+import { formatCurrency, formatDate, formatMonthYear, activeDateFnsLocale } from '../lib/utils'
 import { useAuth, getProfile } from '../hooks/useAuth'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
@@ -18,11 +18,11 @@ import AmbientGlow from '../components/ui/AmbientGlow'
 import CashflowChart from '../components/ui/CashflowChart'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
-function greeting() {
+function greetingKey() {
   const h = new Date().getHours()
-  if (h < 12) return 'Bom dia'
-  if (h < 18) return 'Boa tarde'
-  return 'Boa noite'
+  if (h < 12) return 'dashboard.greeting.morning'
+  if (h < 18) return 'dashboard.greeting.afternoon'
+  return 'dashboard.greeting.evening'
 }
 
 function StatTile({ label, value, icon: Icon, iconColor = 'text-primary', valueColor = 'text-white' }) {
@@ -40,6 +40,7 @@ function StatTile({ label, value, icon: Icon, iconColor = 'text-primary', valueC
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
   const profile = user ? getProfile(user) : null
@@ -156,7 +157,7 @@ export default function Dashboard() {
       const chartMonths = Array.from({ length: 6 }, (_, i) => {
         const d = subMonths(now, 5 - i)
         return {
-          label: format(d, 'MMM/yy', { locale: ptBR }),
+          label: formatMonthYear(d),
           start: startOfMonth(d).toISOString().split('T')[0],
           end: endOfMonth(d).toISOString().split('T')[0],
         }
@@ -181,6 +182,8 @@ export default function Dashboard() {
           name: m.label,
           entradas: entradaSessoes + entradaProjetos,
           saidas: mMaterial + mComissoes + mDespesas,
+          material: mMaterial,
+          despesas: mComissoes + mDespesas,
         }
       })
       setChartData(chart)
@@ -210,7 +213,7 @@ export default function Dashboard() {
       {/* Demo banner */}
       {!isConfigured && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-center">
-          <p className="text-xs text-amber-400">Modo demo — conecte o Supabase para usar com dados reais</p>
+          <p className="text-xs text-amber-400">{t('dashboard.demoBanner')}</p>
         </div>
       )}
 
@@ -221,14 +224,14 @@ export default function Dashboard() {
       >
         <div className="min-w-0">
           <p className="text-xs text-muted uppercase tracking-widest mb-1">
-            {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
+            {format(new Date(), "MMMM 'de' yyyy", { locale: activeDateFnsLocale() })}
           </p>
           {profile ? (
             <h1 className="text-2xl font-bold text-white truncate">
-              {greeting()}, {profile.firstName}
+              {t(greetingKey(), { name: profile.firstName })}
             </h1>
           ) : (
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-white">{t('dashboard.title')}</h1>
           )}
         </div>
         {profile && (
@@ -250,8 +253,8 @@ export default function Dashboard() {
                 <Building2 size={16} className="text-amber-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">Cadastre um estúdio</p>
-                <p className="text-xs text-muted">Necessário para registrar sessões</p>
+                <p className="text-sm font-medium text-white">{t('dashboard.setup.studio.title')}</p>
+                <p className="text-xs text-muted">{t('dashboard.setup.studio.subtitle')}</p>
               </div>
               <ChevronRight size={16} className="text-muted flex-shrink-0" />
             </Card>
@@ -263,19 +266,18 @@ export default function Dashboard() {
                   <SettingsIcon size={16} className="text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white">Custo de material no padrão</p>
+                  <p className="text-sm font-medium text-white">{t('dashboard.setup.material.title')}</p>
                   <p className="text-xs text-muted">
-                    Estamos usando os valores padrão (Pequena R$70, Média R$150, Grande R$250).
-                    Você pode alterar isso quando quiser em Configurações.
+                    {t('dashboard.setup.material.description')}
                   </p>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="ghost" onClick={dismissMaterialAlert}>
-                  Entendi
+                  {t('dashboard.setup.material.gotIt')}
                 </Button>
                 <Button size="sm" variant="secondary" onClick={() => navigate('/config')}>
-                  Configurar
+                  {t('dashboard.setup.material.configure')}
                 </Button>
               </div>
             </Card>
@@ -292,7 +294,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-              Resultado · {format(new Date(), 'MMMM', { locale: ptBR })}
+              {t('dashboard.result.label', { month: format(new Date(), 'MMMM', { locale: activeDateFnsLocale() }) })}
             </p>
             <Wallet size={16} className={kpis.lucro >= 0 ? 'text-primary' : 'text-red-400'} />
           </div>
@@ -303,12 +305,12 @@ export default function Dashboard() {
           >
             {formatCurrency(kpis.lucro)}
           </p>
-          <p className="text-xs text-muted mt-2">Lucro líquido do mês</p>
+          <p className="text-xs text-muted mt-2">{t('dashboard.result.subtitle')}</p>
         </div>
 
         {/* Faturamento */}
         <StatTile
-          label="Faturamento"
+          label={t('dashboard.stats.revenue')}
           value={formatCurrency(kpis.faturamento)}
           icon={TrendingUp}
           iconColor="text-green-400"
@@ -316,7 +318,7 @@ export default function Dashboard() {
 
         {/* A pagar */}
         <StatTile
-          label="A pagar"
+          label={t('dashboard.stats.toPay')}
           value={formatCurrency(aPagar)}
           icon={Banknote}
           iconColor="text-red-400"
@@ -326,10 +328,10 @@ export default function Dashboard() {
 
       {/* Upcoming sessions (agenda) */}
       <div className="px-4 mb-4">
-        <p className="text-xs text-muted uppercase tracking-wide mb-2">Próximas sessões</p>
+        <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('dashboard.upcoming.title')}</p>
         {upcomingSessions.length === 0 ? (
           <Card className="p-4">
-            <p className="text-sm text-muted">Nenhuma sessão agendada</p>
+            <p className="text-sm text-muted">{t('dashboard.upcoming.empty')}</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
@@ -363,7 +365,7 @@ export default function Dashboard() {
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs text-muted uppercase tracking-wide">
-            Comissões pendentes
+            {t('dashboard.pending.title')}
           </p>
           {kpis.pendentes.length > 0 && (
             <Badge variant="warning">{formatCurrency(totalPendente)}</Badge>
@@ -374,7 +376,7 @@ export default function Dashboard() {
             <div className="p-1.5 bg-green-500/10 rounded-lg">
               <CheckCircle2 size={16} className="text-green-400" />
             </div>
-            <p className="text-sm text-muted">Nenhuma comissão pendente</p>
+            <p className="text-sm text-muted">{t('dashboard.pending.empty')}</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
@@ -390,7 +392,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white">{p.studio?.nome || '—'}</p>
-                    <p className="text-xs text-muted">{p.count} sessão(ões)</p>
+                    <p className="text-xs text-muted">{t('dashboard.pending.sessionsCount', { count: p.count })}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -409,7 +411,7 @@ export default function Dashboard() {
       {birthdays.length > 0 && (
         <div className="px-4 mb-4">
           <p className="text-xs text-muted uppercase tracking-wide mb-2">
-            Aniversariantes do mês
+            {t('dashboard.birthdays.title')}
           </p>
           <div className="flex flex-col gap-2">
             {birthdays.map((c) => (
@@ -429,20 +431,24 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Cashflow chart — signed monthly profit, gradient when positive */}
+      {/* Cashflow chart — lucro, material e despesas, últimos 6 meses */}
       <div className="px-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-y-1">
           <p className="text-xs text-muted uppercase tracking-wide">
-            Lucro — últimos 6 meses
+            {t('dashboard.chart.title')}
           </p>
-          <div className="flex items-center gap-3 font-mono text-[10px] tracking-wide text-muted">
+          <div className="flex items-center gap-2.5 font-mono text-[10px] tracking-wide text-muted">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-sm" style={{ background: 'linear-gradient(180deg,#f0637e,#7c6cff)' }} />
-              Lucro
+              {t('dashboard.chart.legend.profit')}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-sm bg-[#f87171]" />
-              Prejuízo
+              <span className="w-2 h-2 rounded-sm bg-[#3987e5]" />
+              {t('dashboard.chart.legend.material')}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-sm bg-[#199e70]" />
+              {t('dashboard.chart.legend.expenses')}
             </span>
           </div>
         </div>
@@ -453,11 +459,11 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="px-4">
-        <p className="text-xs text-muted uppercase tracking-wide mb-2">Ações rápidas</p>
+        <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('dashboard.quickActions.title')}</p>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Nova Sessão', to: '/sessoes/nova', icon: Plus },
-            { label: 'Nova Despesa', to: '/despesas/nova', icon: AlertCircle },
+            { label: t('dashboard.quickActions.newSession'), to: '/sessoes/nova', icon: Plus },
+            { label: t('dashboard.quickActions.newExpense'), to: '/despesas/nova', icon: AlertCircle },
           ].map(({ label, to, icon: Icon }) => (
             <Card
               key={to}

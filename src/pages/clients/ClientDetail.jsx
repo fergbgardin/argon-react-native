@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Edit, Trash2, AlertTriangle, ExternalLink, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { clientsApi, projectsApi } from '../../lib/api'
 import { formatDate, whatsappLink } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -13,6 +14,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [deleteModal, setDeleteModal] = useState(false)
@@ -30,8 +32,8 @@ export default function ClientDetail() {
   if (cLoading) return <LoadingSpinner fullPage />
   if (!cLoading && !client) return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
-      <p className="text-muted">Cliente não encontrado</p>
-      <button onClick={() => navigate('/clientes')} className="text-primary text-sm">← Voltar para clientes</button>
+      <p className="text-muted">{t('clients.detail.notFound')}</p>
+      <button onClick={() => navigate('/clientes')} className="text-primary text-sm">{t('clients.detail.backToClients')}</button>
     </div>
   )
 
@@ -49,9 +51,9 @@ export default function ClientDetail() {
   }
 
   const statusConfig = {
-    ativo: { label: 'Ativo', variant: 'success' },
-    concluido: { label: 'Concluído', variant: 'default' },
-    pausado: { label: 'Pausado', variant: 'warning' },
+    ativo: { label: t('common.projectStatus.active'), variant: 'success' },
+    concluido: { label: t('common.projectStatus.completed'), variant: 'default' },
+    pausado: { label: t('common.projectStatus.paused'), variant: 'warning' },
   }
 
   return (
@@ -77,7 +79,7 @@ export default function ClientDetail() {
           <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 flex gap-3">
             <AlertTriangle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-400 mb-0.5">Alerta de saúde</p>
+              <p className="text-sm font-medium text-red-400 mb-0.5">{t('clients.detail.healthAlertTitle')}</p>
               <p className="text-sm text-red-300">{client.alerta_saude}</p>
             </div>
           </div>
@@ -87,7 +89,7 @@ export default function ClientDetail() {
         <Card className="p-4 flex flex-col gap-3">
           {client.whatsapp && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">WhatsApp</span>
+              <span className="text-xs text-muted">{t('clients.detail.whatsapp')}</span>
               <a
                 href={whatsappLink(client.whatsapp)}
                 target="_blank"
@@ -100,19 +102,19 @@ export default function ClientDetail() {
           )}
           {client.nascimento && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">Nascimento</span>
+              <span className="text-xs text-muted">{t('clients.detail.birthDate')}</span>
               <span className="text-sm text-white">{formatDate(client.nascimento)}</span>
             </div>
           )}
           {client.cpf && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">CPF</span>
+              <span className="text-xs text-muted">{t('clients.detail.cpf')}</span>
               <span className="text-sm text-white">{client.cpf}</span>
             </div>
           )}
           {(client.cidade || client.estado) && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted">Localização</span>
+              <span className="text-xs text-muted">{t('clients.detail.location')}</span>
               <span className="text-sm text-white">
                 {[client.cidade, client.estado].filter(Boolean).join(', ')}
               </span>
@@ -123,20 +125,20 @@ export default function ClientDetail() {
         {/* Projects */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-muted uppercase tracking-wide">Projetos</p>
+            <p className="text-xs text-muted uppercase tracking-wide">{t('clients.detail.projectsTitle')}</p>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => navigate(`/projetos/novo?client_id=${id}`)}
             >
-              <Plus size={14} /> Novo projeto
+              <Plus size={14} /> {t('clients.detail.newProject')}
             </Button>
           </div>
 
           {pLoading ? (
-            <p className="text-sm text-muted text-center py-4">Carregando...</p>
+            <p className="text-sm text-muted text-center py-4">{t('common.loading')}</p>
           ) : (projects || []).length === 0 ? (
-            <p className="text-sm text-muted text-center py-4">Nenhum projeto vinculado</p>
+            <p className="text-sm text-muted text-center py-4">{t('clients.detail.noProjects')}</p>
           ) : (
             <div className="flex flex-col gap-2">
               {(projects || []).map((p) => {
@@ -160,24 +162,24 @@ export default function ClientDetail() {
         </div>
       </div>
 
-      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir cliente">
+      <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title={t('clients.detail.deleteTitle')}>
         <p className="text-sm text-muted mb-4">
-          Tem certeza? Esta ação não pode ser desfeita.
+          {t('clients.detail.deleteConfirm')}
         </p>
         <div className="flex gap-3">
-          <Button variant="outline" full onClick={() => setDeleteModal(false)}>Cancelar</Button>
-          <Button variant="danger" full onClick={handleDelete}>Excluir</Button>
+          <Button variant="outline" full onClick={() => setDeleteModal(false)}>{t('common.cancel')}</Button>
+          <Button variant="danger" full onClick={handleDelete}>{t('common.delete')}</Button>
         </div>
       </Modal>
 
-      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title="Não é possível excluir">
+      <Modal open={blockedModal} onClose={() => setBlockedModal(false)} title={t('clients.detail.blockedTitle')}>
         <p className="text-sm text-muted mb-4">
           {(projects || []).length === 1
-            ? 'Este cliente tem 1 projeto vinculado.'
-            : `Este cliente tem ${(projects || []).length} projetos vinculados.`}{' '}
-          Exclua ou transfira os projetos antes de excluir o cliente.
+            ? t('clients.detail.blockedOne')
+            : t('clients.detail.blockedMany', { count: (projects || []).length })}{' '}
+          {t('clients.detail.blockedSuffix')}
         </p>
-        <Button full onClick={() => setBlockedModal(false)}>Entendi</Button>
+        <Button full onClick={() => setBlockedModal(false)}>{t('clients.detail.gotIt')}</Button>
       </Modal>
     </div>
   )

@@ -1,0 +1,457 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "back": "Voltar",
+    "add": "Adicionar",
+    "confirm": "Confirmar",
+    "loading": "Carregando...",
+    "empty": "—",
+    "projectStatus": {
+      "active": "Ativo",
+      "completed": "Concluído",
+      "paused": "Pausado"
+    },
+    "sessionStatus": {
+      "completed": "Concluída",
+      "scheduled": "Agendada"
+    },
+    "paymentMethods": {
+      "pix": "PIX",
+      "credito": "Crédito",
+      "debito": "Débito",
+      "dinheiro": "Dinheiro"
+    }
+  },
+  "dashboard": {
+    "demoBanner": "Modo demo — conecte o Supabase para usar com dados reais",
+    "title": "Dashboard",
+    "greeting": {
+      "morning": "Bom dia, {{name}}",
+      "afternoon": "Boa tarde, {{name}}",
+      "evening": "Boa noite, {{name}}"
+    },
+    "setup": {
+      "studio": {
+        "title": "Cadastre um estúdio",
+        "subtitle": "Necessário para registrar sessões"
+      },
+      "material": {
+        "title": "Custo de material no padrão",
+        "description": "Estamos usando os valores padrão (Pequena R$70, Média R$150, Grande R$250). Você pode alterar isso quando quiser em Configurações.",
+        "gotIt": "Entendi",
+        "configure": "Configurar"
+      }
+    },
+    "result": {
+      "label": "Resultado · {{month}}",
+      "subtitle": "Lucro líquido do mês"
+    },
+    "stats": {
+      "revenue": "Faturamento",
+      "toPay": "A pagar"
+    },
+    "upcoming": {
+      "title": "Próximas sessões",
+      "empty": "Nenhuma sessão agendada"
+    },
+    "pending": {
+      "title": "Comissões pendentes",
+      "empty": "Nenhuma comissão pendente",
+      "sessionsCount": "{{count}} sessão(ões)"
+    },
+    "birthdays": {
+      "title": "Aniversariantes do mês"
+    },
+    "chart": {
+      "title": "Lucro, material e despesas — 6 meses",
+      "legend": {
+        "profit": "Lucro",
+        "material": "Material",
+        "expenses": "Despesas"
+      }
+    },
+    "quickActions": {
+      "title": "Ações rápidas",
+      "newSession": "Nova Sessão",
+      "newExpense": "Nova Despesa"
+    }
+  },
+  "login": {
+    "tagline": "Gestão para tatuadores",
+    "googleButton": "Entrar com Google",
+    "disclaimer": "Ao entrar você concorda com o uso desta plataforma para fins de teste."
+  },
+  "components": {
+    "nav": {
+      "home": "Início",
+      "sessions": "Sessões",
+      "projects": "Projetos",
+      "clients": "Clientes",
+      "settings": "Config"
+    }
+  },
+  "expenses": {
+    "categories": {
+      "marketing": "Marketing",
+      "supplies": "Insumos",
+      "operational": "Operacional",
+      "rentCommission": "Aluguel/Comissão Espaço",
+      "other": "Outros"
+    },
+    "title": "Despesas",
+    "pendingAmount": "{{value}} pendente(s)",
+    "filters": {
+      "pending": "Pendentes",
+      "paid": "Pagas",
+      "all": "Todas"
+    },
+    "empty": {
+      "title": "Nenhuma despesa encontrada"
+    },
+    "newExpense": "Nova Despesa",
+    "status": {
+      "paid": "Pago",
+      "pending": "Pendente"
+    },
+    "due": "Venc: {{date}}",
+    "paidOn": " • Pago: {{date}}",
+    "markPaid": "Marcar pago",
+    "modalTitle": "Nova Despesa",
+    "form": {
+      "description": "Descrição *",
+      "descriptionPlaceholder": "Ex: Mensalidade Canva, Luz...",
+      "value": "Valor (R$) *",
+      "category": "Categoria",
+      "dueDate": "Vencimento",
+      "paymentDate": "Pagamento",
+      "paymentHint": "Preencha se já pago",
+      "required": "Obrigatório"
+    }
+  },
+  "settings": {
+    "title": "Configurações",
+    "materialCost": {
+      "title": "Custo de Material",
+      "small": "Pequena (R$)",
+      "medium": "Média (R$)",
+      "large": "Grande (R$)"
+    },
+    "needlePresets": {
+      "title": "Presets de Agulhas",
+      "placeholder": "Ex: RL #5"
+    },
+    "shortcuts": {
+      "title": "Atalhos",
+      "manageStudios": "Gerenciar Estúdios",
+      "expenses": "Despesas"
+    },
+    "saveButton": "Salvar Configurações",
+    "saved": "✓ Salvo",
+    "signOut": "Sair da conta"
+  },
+  "privacy": {
+    "title": "Aviso de Privacidade e Tratamento de Dados",
+    "intro": "Este aplicativo é uma ferramenta de gestão para tatuadores autônomos. Ao usá-lo, você poderá cadastrar dados pessoais dos seus clientes, incluindo informações sensíveis relacionadas à saúde (ex: alergias, condições de pele, contraindicações), conforme necessário para o seu trabalho.",
+    "declareIntro": "Você, como usuário e responsável pelo cadastro desses dados, declara estar ciente de que:",
+    "bullets": {
+      "consent": "É responsável por obter o consentimento dos seus clientes para o tratamento das informações que você inserir no sistema;",
+      "storage": "Os dados são armazenados de forma segura e isolada, acessíveis apenas pela sua conta;",
+      "purpose": "O uso das informações deve se limitar à finalidade do seu trabalho como tatuador (histórico de projetos, cuidados pós-tatuagem, contato);",
+      "sensitive": "Você não deve inserir dados sensíveis de clientes sem justificativa ligada à prestação do serviço."
+    },
+    "lgpd": "Este aviso está em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018).",
+    "checkboxLabel": "Li e estou de acordo com o tratamento de dados descrito acima, e assumo a responsabilidade pelos dados de terceiros que inserir no sistema.",
+    "error": "Não foi possível registrar seu aceite. Verifique sua conexão e tente novamente.",
+    "continue": "Continuar"
+  },
+  "clients": {
+    "title": "Clientes",
+    "list": {
+      "searchPlaceholder": "Buscar por nome ou WhatsApp...",
+      "emptySearch": "Nenhum cliente encontrado",
+      "emptyTitle": "Nenhum cliente cadastrado",
+      "emptyDescription": "Cadastre seu primeiro cliente.",
+      "newClient": "Novo Cliente"
+    },
+    "form": {
+      "editTitle": "Editar Cliente",
+      "newTitle": "Novo Cliente",
+      "nameRequired": "Nome obrigatório",
+      "whatsappRequired": "WhatsApp obrigatório",
+      "name": "Nome completo *",
+      "namePlaceholder": "Nome do cliente",
+      "whatsapp": "WhatsApp *",
+      "whatsappHint": "Apenas números — será usado para link wa.me",
+      "optionalData": "Dados opcionais",
+      "cpf": "CPF",
+      "birthDate": "Nascimento",
+      "city": "Cidade",
+      "state": "Estado",
+      "healthAlert": "Alerta de saúde",
+      "healthAlertPlaceholder": "Ex: Diabético, alérgico a látex, usa anticoagulante...",
+      "healthAlertHint": "Se preenchido, será exibido em destaque vermelho nas sessões",
+      "saveEdit": "Salvar alterações",
+      "saveNew": "Salvar Cliente"
+    },
+    "detail": {
+      "notFound": "Cliente não encontrado",
+      "backToClients": "← Voltar para clientes",
+      "healthAlertTitle": "Alerta de saúde",
+      "whatsapp": "WhatsApp",
+      "birthDate": "Nascimento",
+      "cpf": "CPF",
+      "location": "Localização",
+      "projectsTitle": "Projetos",
+      "newProject": "Novo projeto",
+      "noProjects": "Nenhum projeto vinculado",
+      "deleteTitle": "Excluir cliente",
+      "deleteConfirm": "Tem certeza? Esta ação não pode ser desfeita.",
+      "blockedTitle": "Não é possível excluir",
+      "blockedOne": "Este cliente tem 1 projeto vinculado.",
+      "blockedMany": "Este cliente tem {{count}} projetos vinculados.",
+      "blockedSuffix": "Exclua ou transfira os projetos antes de excluir o cliente.",
+      "gotIt": "Entendi"
+    }
+  },
+  "studios": {
+    "title": "Estúdios",
+    "subtitle": "Contas e acertos",
+    "pendingSection": "Pendências de repasse",
+    "pendingSessionsCount": "{{count}} sessão(ões) pendente(s)",
+    "settleUp": "Dar baixa →",
+    "allStudios": "Todos os estúdios",
+    "empty": "Nenhum estúdio cadastrado",
+    "newStudio": "Novo Estúdio",
+    "commissionLabel": "comissão",
+    "fixedPerSession": "fixo/sessão",
+    "form": {
+      "editTitle": "Editar Estúdio",
+      "newTitle": "Novo Estúdio",
+      "nameRequired": "Nome obrigatório",
+      "valueRequired": "Informe o valor",
+      "name": "Nome *",
+      "namePlaceholder": "Nome do estúdio",
+      "address": "Endereço / Cidade",
+      "addressPlaceholder": "Ex: Rua das Flores, 123 — São Paulo",
+      "billingType": "Tipo de cobrança",
+      "percentage": "Porcentagem",
+      "percentageDesc": "Ex: 30% do total",
+      "fixed": "Valor fixo",
+      "fixedDesc": "Ex: R$ 150 por sessão",
+      "percentageValue": "Porcentagem (%)",
+      "fixedValue": "Valor fixo (R$)",
+      "percentagePlaceholder": "Ex: 30",
+      "fixedPlaceholder": "Ex: 150,00",
+      "favoriteTitle": "Estúdio favorito",
+      "favoriteHint": "Pré-selecionado em novas sessões",
+      "saveEdit": "Salvar alterações",
+      "saveNew": "Salvar Estúdio",
+      "deleteTitle": "Excluir estúdio",
+      "deleteConfirm": "Tem certeza? As sessões vinculadas a este estúdio ficarão sem estúdio, mas não serão excluídas."
+    },
+    "payout": {
+      "title": "Acerto de Contas",
+      "allSettled": "Tudo em dia!",
+      "noneNow": "Nenhuma comissão pendente para este estúdio",
+      "totalToSettle": "Total a repassar",
+      "ruleSummary": "{{count}} sessão(ões) — regra: {{rule}}",
+      "includedSessions": "Sessões incluídas",
+      "total": "Total: {{value}}",
+      "settleButton": "Dar Baixa — {{value}}",
+      "confirmTitle": "Confirmar acerto",
+      "confirmText": "Confirmar repasse de {{value}} para {{studio}}?",
+      "confirmSessions": "{{count}} sessão(ões) serão marcadas como pagas."
+    }
+  },
+  "projects": {
+    "title": "Projetos",
+    "billingType": {
+      "perSession": "Por sessão",
+      "closed": "Fechado"
+    },
+    "sessionsCount": "{{done}} sessão(ões)",
+    "sessionsCountOf": "{{done}}/{{estimated}} sessão(ões)",
+    "paymentValueLabel": "Valor (R$)",
+    "paymentDateLabel": "Data",
+    "list": {
+      "searchPlaceholder": "Buscar cliente ou projeto...",
+      "filters": {
+        "active": "Ativos",
+        "completed": "Concluídos",
+        "paused": "Pausados",
+        "all": "Todos"
+      },
+      "emptyTitle": "Nenhum projeto encontrado",
+      "newProject": "Novo Projeto"
+    },
+    "form": {
+      "editTitle": "Editar Projeto",
+      "newTitle": "Novo Projeto",
+      "client": "Cliente *",
+      "searchClientPlaceholder": "Buscar cliente...",
+      "clientRequired": "Selecione um cliente",
+      "nameRequired": "Informe o nome do projeto",
+      "name": "Nome do projeto *",
+      "namePlaceholder": "Ex: Manga completa, Costas...",
+      "billingType": "Tipo de cobrança",
+      "bodyArea": "Área do corpo",
+      "bodyAreaGroups": {
+        "head": "Cabeça / Pescoço",
+        "torso": "Tronco",
+        "arms": "Braços",
+        "legs": "Pernas"
+      },
+      "billingOptions": {
+        "perSessionDesc": "Cada sessão é uma transação",
+        "closedDesc": "Valor total combinado"
+      },
+      "totalValue": "Valor total (R$)",
+      "valuePlaceholder": "0,00",
+      "estimatedSessions": "Sessões estimadas",
+      "estimatedSessionsPlaceholder": "Ex: 3",
+      "paymentReceived": "Pagamento recebido",
+      "secondMethod": "Segunda forma",
+      "total": "Total:",
+      "splitPayment": "+ Dividir em outra forma de pagamento",
+      "blankIfNotReceived": "Deixe em branco se ainda não recebeu",
+      "saveEdit": "Salvar alterações",
+      "createProject": "Criar Projeto"
+    },
+    "detail": {
+      "notFound": "Projeto não encontrado",
+      "backToProjects": "← Voltar para projetos",
+      "closedProject": "Projeto fechado",
+      "perSessionBilling": "Cobrança por sessão",
+      "area": "Área",
+      "whatsapp": "WhatsApp: {{phone}}",
+      "progress": "Progresso",
+      "financial": "Financeiro",
+      "combinedValue": "Valor combinado",
+      "estimate": "Estimativa",
+      "received": "Recebido",
+      "remainingBalance": "Saldo restante",
+      "paymentsReceived": "Pagamentos recebidos",
+      "registerPayment": "Registrar pagamento",
+      "sessionsTitle": "Sessões",
+      "newSession": "Nova sessão",
+      "noSessions": "Nenhuma sessão registrada",
+      "sessionNumber": "Sessão {{number}}",
+      "pause": "Pausar",
+      "complete": "Concluir",
+      "needSessionToComplete": "Adicione ao menos uma sessão para concluir o projeto.",
+      "deleteTitle": "Excluir projeto",
+      "deleteConfirm": "Tem certeza? Esta ação não pode ser desfeita.",
+      "blockedTitle": "Não é possível excluir",
+      "blockedOne": "Este projeto tem 1 sessão vinculada.",
+      "blockedMany": "Este projeto tem {{count}} sessões vinculadas.",
+      "blockedSuffix": "Exclua as sessões antes de excluir o projeto.",
+      "gotIt": "Entendi"
+    }
+  },
+  "sessions": {
+    "title": "Sessões",
+    "filters": {
+      "all": "Todas",
+      "scheduled": "Agendadas",
+      "completed": "Concluídas"
+    },
+    "list": {
+      "emptyTitle": "Nenhuma sessão encontrada",
+      "emptyDescriptionAll": "Adicione sua primeira sessão.",
+      "emptyDescriptionFiltered": "Nenhuma sessão com este filtro.",
+      "newSession": "Nova Sessão",
+      "sessionNumber": "· Sessão {{number}}"
+    },
+    "detail": {
+      "notFound": "Sessão não encontrada",
+      "backToSessions": "← Voltar para sessões",
+      "fallbackTitle": "Sessão",
+      "client": "Cliente",
+      "project": "Projeto",
+      "studio": "Estúdio",
+      "whatsapp": "WhatsApp: {{phone}}",
+      "technicalDetails": "Detalhes técnicos",
+      "needles": "Agulhas",
+      "noNeedles": "Nenhuma agulha registrada",
+      "financial": "Financeiro",
+      "sessionValue": "Valor desta sessão",
+      "sessionValueMissing": "Valor desta sessão não informado",
+      "closedProjectHint": "Pagamentos deste projeto fechado são gerenciados na tela do projeto.",
+      "totalReceived": "Total recebido",
+      "noPayments": "Nenhum pagamento registrado",
+      "material": "Material",
+      "studioCommission": "Comissão estúdio",
+      "settledTag": "(repassado)",
+      "pendingTag": "(pendente)",
+      "settleCommission": "Acertar comissão do estúdio",
+      "settleHint": "A comissão poderá ser acertada quando a sessão for concluída.",
+      "anamnesis": "Anamnese",
+      "replacePhoto": "Substituir",
+      "addPhoto": "Adicionar foto",
+      "noPhoto": "Nenhuma foto adicionada",
+      "notes": "Observações",
+      "completeSession": "Concluir sessão",
+      "completeHint": "Confirme pagamento, material e comissão pelo botão de editar (lápis) antes de concluir. Ao concluir, os dados já preenchidos são mantidos.",
+      "noCommissionWarning": "Atenção: esta sessão está sem comissão de estúdio. Se houver comissão a repassar, edite a sessão e preencha antes de concluir.",
+      "markComplete": "Marcar como Concluída",
+      "deleteTitle": "Excluir sessão",
+      "deleteConfirm": "Tem certeza? Esta ação não pode ser desfeita.",
+      "photoUploadError": "Não foi possível enviar a foto: {{reason}}",
+      "photoUploadFallbackReason": "verifique se o bucket \"inkmanager\" existe no Supabase Storage (público)."
+    },
+    "form": {
+      "editTitle": "Editar Sessão",
+      "newTitle": "Nova Sessão",
+      "projectClient": "Projeto / Cliente *",
+      "selectProject": "Selecionar projeto...",
+      "projectRequired": "Selecione um projeto",
+      "studioRequired": "Selecione um estúdio",
+      "dateRequired": "Informe a data",
+      "date": "Data *",
+      "status": "Status",
+      "noStudiosTitle": "Cadastre um estúdio primeiro",
+      "noStudiosDescription": "Toda sessão precisa estar vinculada a um estúdio. Cadastre pelo menos um antes de criar sessões.",
+      "registerStudio": "Cadastrar Estúdio",
+      "payment": "Pagamento",
+      "valueLabel": "Valor (R$)",
+      "secondMethod": "Segunda forma",
+      "total": "Total: R$ {{value}}",
+      "splitPayment": "+ Dividir em outra forma de pagamento",
+      "blankIfNotReceived": "Deixe em branco se ainda não recebeu",
+      "materialCostTitle": "Custo de Material",
+      "materialSize": "Tamanho",
+      "selectPlaceholder": "Selecionar...",
+      "materialSmall": "Pequena — R$ {{value}}",
+      "materialMedium": "Média — R$ {{value}}",
+      "materialLarge": "Grande — R$ {{value}}",
+      "materialOther": "Outro (valor específico)",
+      "materialOtherValue": "Valor específico (R$)",
+      "materialEditableValue": "Valor (editável)",
+      "closedSessionValueTitle": "Valor desta sessão",
+      "closedSessionValueHint": "Usado para calcular a comissão do estúdio",
+      "commissionTitle": "Comissão do Estúdio",
+      "studioLabel": "Estúdio *",
+      "selectStudio": "Selecionar estúdio...",
+      "rate": "Taxa: {{rate}}",
+      "rateFixed": "R$ {{value}} fixo",
+      "percentage": "Percentual (%)",
+      "commissionHint": "Puxado do estúdio e travado nesta sessão — edite o valor ou o percentual.",
+      "technicalDetails": "Detalhes técnicos",
+      "needles": "Agulhas",
+      "needlesPlaceholder": "Ex: RL #5, RM #7",
+      "changePhoto": "Trocar foto",
+      "addPhoto": "Adicionar foto",
+      "noPhoto": "Nenhuma foto adicionada",
+      "photoWillUpload": "A foto será enviada ao salvar a sessão.",
+      "notes": "Observações",
+      "notesPlaceholder": "Notas gerais, observações sobre o cliente...",
+      "save": "Salvar Sessão",
+      "paymentSavedFailed": "Sessão salva, mas o pagamento falhou: {{reason}}",
+      "photoSavedFailed": "Sessão salva, mas a foto falhou: {{reason}}",
+      "photoFallbackReason": "verifique se o bucket \"inkmanager\" existe no Supabase Storage."
+    }
+  }
+}

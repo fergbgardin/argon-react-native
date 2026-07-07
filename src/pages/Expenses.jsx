@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Receipt, CheckCircle2, Clock } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { expensesApi } from '../lib/api'
 import { formatDate, formatCurrency } from '../lib/utils'
 import { useData } from '../hooks/useData'
@@ -15,15 +16,17 @@ import EmptyState from '../components/ui/EmptyState'
 import AmbientGlow from '../components/ui/AmbientGlow'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
-const CATEGORIES = [
-  'Marketing',
-  'Insumos',
-  'Operacional',
-  'Aluguel/Comissão Espaço',
-  'Outros',
+// value = valor gravado no banco (não traduzir — dado já existente); labelKey = rótulo exibido
+const CATEGORY_OPTIONS = [
+  { value: 'Marketing', labelKey: 'expenses.categories.marketing' },
+  { value: 'Insumos', labelKey: 'expenses.categories.supplies' },
+  { value: 'Operacional', labelKey: 'expenses.categories.operational' },
+  { value: 'Aluguel/Comissão Espaço', labelKey: 'expenses.categories.rentCommission' },
+  { value: 'Outros', labelKey: 'expenses.categories.other' },
 ]
 
 function ExpenseForm({ onSave, onClose }) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     descricao: '',
@@ -41,8 +44,8 @@ function ExpenseForm({ onSave, onClose }) {
   async function handleSubmit(e) {
     e.preventDefault()
     const errs = {}
-    if (!form.descricao.trim()) errs.descricao = 'Obrigatório'
-    if (!form.valor) errs.valor = 'Obrigatório'
+    if (!form.descricao.trim()) errs.descricao = t('expenses.form.required')
+    if (!form.valor) errs.valor = t('expenses.form.required')
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
 
@@ -61,15 +64,15 @@ function ExpenseForm({ onSave, onClose }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <Input
-        label="Descrição *"
-        placeholder="Ex: Mensalidade Canva, Luz..."
+        label={t('expenses.form.description')}
+        placeholder={t('expenses.form.descriptionPlaceholder')}
         value={form.descricao}
         onChange={(e) => handleChange('descricao', e.target.value)}
         error={errors.descricao}
       />
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Valor (R$) *"
+          label={t('expenses.form.value')}
           type="number"
           step="0.01"
           value={form.valor}
@@ -77,36 +80,36 @@ function ExpenseForm({ onSave, onClose }) {
           error={errors.valor}
         />
         <Select
-          label="Categoria"
+          label={t('expenses.form.category')}
           value={form.categoria}
           onChange={(e) => handleChange('categoria', e.target.value)}
         >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
+          {CATEGORY_OPTIONS.map(({ value, labelKey }) => (
+            <option key={value} value={value}>{t(labelKey)}</option>
           ))}
         </Select>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Vencimento"
+          label={t('expenses.form.dueDate')}
           type="date"
           value={form.data_vencimento}
           onChange={(e) => handleChange('data_vencimento', e.target.value)}
         />
         <Input
-          label="Pagamento"
+          label={t('expenses.form.paymentDate')}
           type="date"
           value={form.data_pagamento}
           onChange={(e) => handleChange('data_pagamento', e.target.value)}
-          hint="Preencha se já pago"
+          hint={t('expenses.form.paymentHint')}
         />
       </div>
       <div className="flex gap-2 mt-2">
         <Button variant="outline" full type="button" onClick={onClose}>
-          Cancelar
+          {t('common.cancel')}
         </Button>
         <Button full type="submit" loading={loading}>
-          Salvar
+          {t('common.save')}
         </Button>
       </div>
     </form>
@@ -114,6 +117,7 @@ function ExpenseForm({ onSave, onClose }) {
 }
 
 export default function Expenses() {
+  const { t } = useTranslation()
   const [modal, setModal] = useState(false)
   const [filter, setFilter] = useState('pendente')
   const { data: expenses, loading, refetch } = useData(() => expensesApi.list())
@@ -148,10 +152,10 @@ export default function Expenses() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-white">Despesas</h1>
+          <h1 className="text-2xl font-bold text-white">{t('expenses.title')}</h1>
           {totalPendente > 0 && (
             <p className="text-xs text-amber-400 mt-0.5">
-              {formatCurrency(totalPendente)} pendente(s)
+              {t('expenses.pendingAmount', { value: formatCurrency(totalPendente) })}
             </p>
           )}
         </div>
@@ -163,12 +167,12 @@ export default function Expenses() {
       {/* Filters */}
       <div className="px-4 flex gap-2 mb-4">
         {[
-          { key: 'pendente', label: 'Pendentes' },
-          { key: 'pago', label: 'Pagas' },
-          { key: 'todas', label: 'Todas' },
-        ].map(({ key, label }) => (
+          { key: 'pendente', labelKey: 'expenses.filters.pending' },
+          { key: 'pago', labelKey: 'expenses.filters.paid' },
+          { key: 'todas', labelKey: 'expenses.filters.all' },
+        ].map(({ key, labelKey }) => (
           <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
-            {label}
+            {t(labelKey)}
           </Chip>
         ))}
       </div>
@@ -177,11 +181,11 @@ export default function Expenses() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={Receipt}
-            title="Nenhuma despesa encontrada"
+            title={t('expenses.empty.title')}
             action={
               filter === 'pendente' && (
                 <Button onClick={() => setModal(true)}>
-                  <Plus size={16} /> Nova Despesa
+                  <Plus size={16} /> {t('expenses.newExpense')}
                 </Button>
               )
             }
@@ -194,15 +198,15 @@ export default function Expenses() {
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-white font-medium truncate">{expense.descricao}</p>
                     {expense.data_pagamento ? (
-                      <Badge variant="success">Pago</Badge>
+                      <Badge variant="success">{t('expenses.status.paid')}</Badge>
                     ) : (
-                      <Badge variant="warning">Pendente</Badge>
+                      <Badge variant="warning">{t('expenses.status.pending')}</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted">{expense.categoria}</p>
                   <p className="text-xs text-muted">
-                    Venc: {formatDate(expense.data_vencimento)}
-                    {expense.data_pagamento && ` • Pago: ${formatDate(expense.data_pagamento)}`}
+                    {t('expenses.due', { date: formatDate(expense.data_vencimento) })}
+                    {expense.data_pagamento && t('expenses.paidOn', { date: formatDate(expense.data_pagamento) })}
                   </p>
                 </div>
                 <p className="text-white font-semibold">{formatCurrency(expense.valor)}</p>
@@ -215,14 +219,14 @@ export default function Expenses() {
                     variant="secondary"
                     onClick={() => handleMarkPaid(expense)}
                   >
-                    <CheckCircle2 size={14} /> Marcar pago
+                    <CheckCircle2 size={14} /> {t('expenses.markPaid')}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(expense.id)}
                   >
-                    Excluir
+                    {t('common.delete')}
                   </Button>
                 </div>
               )}
@@ -231,7 +235,7 @@ export default function Expenses() {
         )}
       </div>
 
-      <Modal open={modal} onClose={() => setModal(false)} title="Nova Despesa">
+      <Modal open={modal} onClose={() => setModal(false)} title={t('expenses.modalTitle')}>
         <ExpenseForm
           onSave={() => {
             setModal(false)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, FolderKanban, Search, X, Building2, Syringe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { projectsApi, sessionsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import { formatCurrency } from '../../lib/utils'
@@ -13,14 +14,14 @@ import EmptyState from '../../components/ui/EmptyState'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
-const statusConfig = {
-  ativo: { label: 'Ativo', variant: 'success' },
-  concluido: { label: 'Concluído', variant: 'default' },
-  pausado: { label: 'Pausado', variant: 'warning' },
-}
-
 export default function ProjectList() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const statusConfig = {
+    ativo: { label: t('common.projectStatus.active'), variant: 'success' },
+    concluido: { label: t('common.projectStatus.completed'), variant: 'default' },
+    pausado: { label: t('common.projectStatus.paused'), variant: 'warning' },
+  }
   const [filter, setFilter] = useState('ativo')
   const [search, setSearch] = useState('')
   const { data: projects, loading } = useData(() => projectsApi.list())
@@ -74,7 +75,7 @@ export default function ProjectList() {
         className="sticky top-0 z-30 glass-header flex items-center justify-between px-4 pb-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
-        <h1 className="text-2xl font-bold text-white">Projetos</h1>
+        <h1 className="text-2xl font-bold text-white">{t('projects.title')}</h1>
         <Button size="icon" onClick={() => navigate('/projetos/novo')}>
           <Plus size={18} />
         </Button>
@@ -85,7 +86,7 @@ export default function ProjectList() {
         <Input
           type="text"
           icon={Search}
-          placeholder="Buscar cliente ou projeto..."
+          placeholder={t('projects.list.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           right={
@@ -100,10 +101,10 @@ export default function ProjectList() {
 
       <div className="px-4 flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
         {[
-          { key: 'ativo', label: 'Ativos' },
-          { key: 'concluido', label: 'Concluídos' },
-          { key: 'pausado', label: 'Pausados' },
-          { key: 'todos', label: 'Todos' },
+          { key: 'ativo', label: t('projects.list.filters.active') },
+          { key: 'concluido', label: t('projects.list.filters.completed') },
+          { key: 'pausado', label: t('projects.list.filters.paused') },
+          { key: 'todos', label: t('projects.list.filters.all') },
         ].map(({ key, label }) => (
           <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
             {label}
@@ -115,11 +116,11 @@ export default function ProjectList() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={FolderKanban}
-            title="Nenhum projeto encontrado"
+            title={t('projects.list.emptyTitle')}
             action={
               filter === 'ativo' && (
                 <Button onClick={() => navigate('/projetos/novo')}>
-                  <Plus size={16} /> Novo Projeto
+                  <Plus size={16} /> {t('projects.list.newProject')}
                 </Button>
               )
             }
@@ -149,10 +150,11 @@ export default function ProjectList() {
                       <p className="text-xs text-muted">{project.area_corpo}</p>
                     )}
                     <p className="text-xs text-muted">
-                      {project.tipo_cobranca === 'fechado' ? 'Fechado' : 'Por sessão'}
+                      {project.tipo_cobranca === 'fechado' ? t('projects.billingType.closed') : t('projects.billingType.perSession')}
                       <span className="ml-1.5 text-primary/70">
-                        · {doneByProject[project.id] || 0}
-                        {project.sessoes_estimadas ? `/${project.sessoes_estimadas}` : ''} sessão(ões)
+                        · {project.sessoes_estimadas
+                          ? t('projects.sessionsCountOf', { done: doneByProject[project.id] || 0, estimated: project.sessoes_estimadas })
+                          : t('projects.sessionsCount', { done: doneByProject[project.id] || 0 })}
                       </span>
                     </p>
                   </div>

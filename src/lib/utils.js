@@ -1,9 +1,23 @@
 import { format, parseISO, isSameMonth, startOfMonth, endOfMonth } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
+import i18n from '../i18n'
+
+// Maps i18next language codes to their date-fns/Intl locale. Falls back to
+// pt-BR so new i18next languages don't need to touch these call sites again.
+const DATE_FNS_LOCALES = { pt: ptBR, en: enUS }
+const INTL_LOCALES = { pt: 'pt-BR', en: 'en-US' }
+
+export function activeDateFnsLocale() {
+  return DATE_FNS_LOCALES[i18n.language] || ptBR
+}
+
+function activeIntlLocale() {
+  return INTL_LOCALES[i18n.language] || 'pt-BR'
+}
 
 export function formatCurrency(value) {
   if (!value && value !== 0) return '—'
-  return new Intl.NumberFormat('pt-BR', {
+  return new Intl.NumberFormat(activeIntlLocale(), {
     style: 'currency',
     currency: 'BRL',
   }).format(value)
@@ -13,7 +27,7 @@ export function formatDate(date) {
   if (!date) return '—'
   try {
     const d = typeof date === 'string' ? parseISO(date) : date
-    return format(d, 'dd/MM/yyyy', { locale: ptBR })
+    return format(d, 'dd/MM/yyyy', { locale: activeDateFnsLocale() })
   } catch {
     return '—'
   }
@@ -23,7 +37,7 @@ export function formatDateShort(date) {
   if (!date) return '—'
   try {
     const d = typeof date === 'string' ? parseISO(date) : date
-    return format(d, 'dd/MM', { locale: ptBR })
+    return format(d, 'dd/MM', { locale: activeDateFnsLocale() })
   } catch {
     return '—'
   }
@@ -33,7 +47,7 @@ export function formatMonthYear(date) {
   if (!date) return '—'
   try {
     const d = typeof date === 'string' ? parseISO(date) : date
-    return format(d, 'MMM/yy', { locale: ptBR })
+    return format(d, 'MMM/yy', { locale: activeDateFnsLocale() })
   } catch {
     return '—'
   }

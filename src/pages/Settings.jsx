@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Building2, Receipt, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { settingsApi } from '../lib/api'
 import { supabase, isConfigured } from '../lib/supabase'
 import { useAuth, getProfile } from '../hooks/useAuth'
@@ -13,6 +14,7 @@ import AmbientGlow from '../components/ui/AmbientGlow'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
 
 export default function Settings() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuth()
   const profile = user ? getProfile(user) : null
@@ -77,7 +79,7 @@ export default function Settings() {
         className="sticky top-0 z-30 glass-header px-4 pb-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
-        <h1 className="text-2xl font-bold text-white">Configurações</h1>
+        <h1 className="text-2xl font-bold text-white">{t('settings.title')}</h1>
       </div>
 
       <div className="px-4 flex flex-col gap-4">
@@ -94,10 +96,10 @@ export default function Settings() {
 
         {/* Material costs */}
         <Card className="p-4 flex flex-col gap-4">
-          <p className="text-xs text-muted uppercase tracking-wide">Custo de Material</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('settings.materialCost.title')}</p>
           <div className="grid grid-cols-3 gap-3">
             <Input
-              label="Pequena (R$)"
+              label={t('settings.materialCost.small')}
               type="number"
               step="0.01"
               placeholder="70"
@@ -107,7 +109,7 @@ export default function Settings() {
               }
             />
             <Input
-              label="Média (R$)"
+              label={t('settings.materialCost.medium')}
               type="number"
               step="0.01"
               placeholder="150"
@@ -117,7 +119,7 @@ export default function Settings() {
               }
             />
             <Input
-              label="Grande (R$)"
+              label={t('settings.materialCost.large')}
               type="number"
               step="0.01"
               placeholder="250"
@@ -131,7 +133,7 @@ export default function Settings() {
 
         {/* Needle presets */}
         <Card className="p-4 flex flex-col gap-3">
-          <p className="text-xs text-muted uppercase tracking-wide">Presets de Agulhas</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('settings.needlePresets.title')}</p>
           <div className="flex flex-wrap gap-2">
             {form.presets_agulhas.map((ag, i) => (
               <div
@@ -152,7 +154,7 @@ export default function Settings() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Ex: RL #5"
+              placeholder={t('settings.needlePresets.placeholder')}
               value={newAgulha}
               onChange={(e) => setNewAgulha(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addAgulha())}
@@ -166,18 +168,18 @@ export default function Settings() {
 
         {/* Quick links */}
         <Card className="p-4 flex flex-col gap-2">
-          <p className="text-xs text-muted uppercase tracking-wide mb-1">Atalhos</p>
+          <p className="text-xs text-muted uppercase tracking-wide mb-1">{t('settings.shortcuts.title')}</p>
           {[
-            { label: 'Gerenciar Estúdios', icon: Building2, to: '/studios' },
-            { label: 'Despesas', icon: Receipt, to: '/despesas' },
-          ].map(({ label, icon: Icon, to }) => (
+            { labelKey: 'settings.shortcuts.manageStudios', icon: Building2, to: '/studios' },
+            { labelKey: 'settings.shortcuts.expenses', icon: Receipt, to: '/despesas' },
+          ].map(({ labelKey, icon: Icon, to }) => (
             <button
               key={to}
               onClick={() => navigate(to)}
               className="flex items-center gap-3 py-2 text-white hover:text-primary transition-colors"
             >
               <Icon size={16} className="text-muted" />
-              <span className="text-sm">{label}</span>
+              <span className="text-sm">{t(labelKey)}</span>
             </button>
           ))}
         </Card>
@@ -188,7 +190,7 @@ export default function Settings() {
           loading={saving}
           variant={saved ? 'secondary' : 'primary'}
         >
-          {saved ? '✓ Salvo' : 'Salvar Configurações'}
+          {saved ? t('settings.saved') : t('settings.saveButton')}
         </Button>
 
         {isConfigured && (
@@ -197,7 +199,7 @@ export default function Settings() {
             className="w-full flex items-center justify-center gap-2 text-sm text-muted hover:text-red-400 transition-colors py-3 mb-6"
           >
             <LogOut size={14} />
-            Sair da conta
+            {t('settings.signOut')}
           </button>
         )}
       </div>

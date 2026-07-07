@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { clientsApi } from '../../lib/api'
 import allCities from '../../lib/brazilianCities.json'
 import PageHeader from '../../components/ui/PageHeader'
@@ -11,6 +12,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function ClientForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { id } = useParams()
   const isEditing = !!id
@@ -82,8 +84,8 @@ export default function ClientForm() {
 
   function validate() {
     const errs = {}
-    if (!form.nome.trim()) errs.nome = 'Nome obrigatório'
-    if (!form.whatsapp.trim()) errs.whatsapp = 'WhatsApp obrigatório'
+    if (!form.nome.trim()) errs.nome = t('clients.form.nameRequired')
+    if (!form.whatsapp.trim()) errs.whatsapp = t('clients.form.whatsappRequired')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -120,40 +122,40 @@ export default function ClientForm() {
   return (
     <div className="relative min-h-screen bg-bg pb-nav">
       <AmbientGlow />
-      <PageHeader title={isEditing ? 'Editar Cliente' : 'Novo Cliente'} />
+      <PageHeader title={isEditing ? t('clients.form.editTitle') : t('clients.form.newTitle')} />
 
       <form onSubmit={handleSubmit} className="px-4 flex flex-col gap-4">
         <Card className="p-4 flex flex-col gap-4">
           <Input
-            label="Nome completo *"
-            placeholder="Nome do cliente"
+            label={t('clients.form.name')}
+            placeholder={t('clients.form.namePlaceholder')}
             value={form.nome}
             onChange={(e) => handleChange('nome', e.target.value)}
             error={errors.nome}
           />
           <Input
-            label="WhatsApp *"
+            label={t('clients.form.whatsapp')}
             placeholder="11999999999"
             type="tel"
             inputMode="numeric"
             value={form.whatsapp}
             onChange={(e) => handleChange('whatsapp', e.target.value)}
             error={errors.whatsapp}
-            hint="Apenas números — será usado para link wa.me"
+            hint={t('clients.form.whatsappHint')}
           />
         </Card>
 
         <Card className="p-4 flex flex-col gap-4">
-          <p className="text-xs text-muted uppercase tracking-wide">Dados opcionais</p>
+          <p className="text-xs text-muted uppercase tracking-wide">{t('clients.form.optionalData')}</p>
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="CPF"
+              label={t('clients.form.cpf')}
               placeholder="000.000.000-00"
               value={form.cpf}
               onChange={(e) => handleChange('cpf', e.target.value)}
             />
             <Input
-              label="Nascimento"
+              label={t('clients.form.birthDate')}
               type="date"
               value={form.nascimento}
               onChange={(e) => handleChange('nascimento', e.target.value)}
@@ -162,7 +164,7 @@ export default function ClientForm() {
           <div className="grid grid-cols-2 gap-3">
             <div className="relative">
               <Input
-                label="Cidade"
+                label={t('clients.form.city')}
                 placeholder="São Paulo"
                 value={form.cidade}
                 autoComplete="off"
@@ -187,7 +189,7 @@ export default function ClientForm() {
               )}
             </div>
             <Input
-              label="Estado"
+              label={t('clients.form.state')}
               placeholder="SP"
               maxLength={2}
               value={form.estado}
@@ -198,11 +200,11 @@ export default function ClientForm() {
 
         <Card className="p-4">
           <Textarea
-            label="Alerta de saúde"
-            placeholder="Ex: Diabético, alérgico a látex, usa anticoagulante..."
+            label={t('clients.form.healthAlert')}
+            placeholder={t('clients.form.healthAlertPlaceholder')}
             value={form.alerta_saude}
             onChange={(e) => handleChange('alerta_saude', e.target.value)}
-            hint="Se preenchido, será exibido em destaque vermelho nas sessões"
+            hint={t('clients.form.healthAlertHint')}
           />
         </Card>
 
@@ -211,7 +213,7 @@ export default function ClientForm() {
         )}
 
         <Button type="submit" full loading={loading} className="mb-6">
-          {isEditing ? 'Salvar alterações' : 'Salvar Cliente'}
+          {isEditing ? t('clients.form.saveEdit') : t('clients.form.saveNew')}
         </Button>
       </form>
     </div>

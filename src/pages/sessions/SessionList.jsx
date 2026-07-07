@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, CalendarDays, CheckCircle2, Clock, Building2, Syringe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { sessionsApi } from '../../lib/api'
 import { formatDate, formatCurrency } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -12,13 +13,13 @@ import EmptyState from '../../components/ui/EmptyState'
 import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
-const statusConfig = {
-  agendada: { label: 'Agendada', variant: 'warning', icon: Clock },
-  concluida: { label: 'Concluída', variant: 'success', icon: CheckCircle2 },
-}
-
 export default function SessionList() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const statusConfig = {
+    agendada: { label: t('common.sessionStatus.scheduled'), variant: 'warning', icon: Clock },
+    concluida: { label: t('common.sessionStatus.completed'), variant: 'success', icon: CheckCircle2 },
+  }
   const [filter, setFilter] = useState('todas')
   const { data: sessions, loading, refetch } = useData(() => sessionsApi.list())
 
@@ -63,7 +64,7 @@ export default function SessionList() {
         className="sticky top-0 z-30 glass-header flex items-center justify-between px-4 pb-4"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
-        <h1 className="text-2xl font-bold text-white">Sessões</h1>
+        <h1 className="text-2xl font-bold text-white">{t('sessions.title')}</h1>
         <Button size="icon" onClick={() => navigate('/sessoes/nova')}>
           <Plus size={18} />
         </Button>
@@ -72,9 +73,9 @@ export default function SessionList() {
       {/* Filters */}
       <div className="px-4 flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
         {[
-          { key: 'todas', label: 'Todas' },
-          { key: 'agendada', label: 'Agendadas' },
-          { key: 'concluida', label: 'Concluídas' },
+          { key: 'todas', label: t('sessions.filters.all') },
+          { key: 'agendada', label: t('sessions.filters.scheduled') },
+          { key: 'concluida', label: t('sessions.filters.completed') },
         ].map(({ key, label }) => (
           <Chip key={key} active={filter === key} onClick={() => setFilter(key)}>
             {label}
@@ -87,12 +88,12 @@ export default function SessionList() {
         {filtered.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
-            title="Nenhuma sessão encontrada"
-            description={filter === 'todas' ? 'Adicione sua primeira sessão.' : 'Nenhuma sessão com este filtro.'}
+            title={t('sessions.list.emptyTitle')}
+            description={filter === 'todas' ? t('sessions.list.emptyDescriptionAll') : t('sessions.list.emptyDescriptionFiltered')}
             action={
               filter === 'todas' && (
                 <Button onClick={() => navigate('/sessoes/nova')}>
-                  <Plus size={16} /> Nova Sessão
+                  <Plus size={16} /> {t('sessions.list.newSession')}
                 </Button>
               )
             }
@@ -122,7 +123,7 @@ export default function SessionList() {
                       {session.projects?.nome || '—'}
                       {sessionNumberMap[session.id] && (
                         <span className="ml-1.5 text-xs text-primary/70">
-                          · Sessão {sessionNumberMap[session.id]}
+                          {t('sessions.list.sessionNumber', { number: sessionNumberMap[session.id] })}
                         </span>
                       )}
                     </p>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Building2, Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { studiosApi, sessionsApi } from '../../lib/api'
 import { formatCurrency } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
@@ -12,6 +13,7 @@ import AmbientGlow from '../../components/ui/AmbientGlow'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 export default function StudioList() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: studios, loading: sLoading } = useData(() => studiosApi.list())
   const { data: sessions, loading: sessLoading } = useData(() => sessionsApi.listPendingPayout())
@@ -36,8 +38,8 @@ export default function StudioList() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-white">Estúdios</h1>
-          <p className="text-xs text-muted">Contas e acertos</p>
+          <h1 className="text-2xl font-bold text-white">{t('studios.title')}</h1>
+          <p className="text-xs text-muted">{t('studios.subtitle')}</p>
         </div>
         <Button size="icon" onClick={() => navigate('/studios/novo')}>
           <Plus size={18} />
@@ -48,7 +50,7 @@ export default function StudioList() {
       {Object.keys(pendingByStudio).length > 0 && (
         <div className="px-4 mb-4">
           <p className="text-xs text-muted uppercase tracking-wide mb-2">
-            Pendências de repasse
+            {t('studios.pendingSection')}
           </p>
           <div className="flex flex-col gap-2">
             {(studios || [])
@@ -64,13 +66,13 @@ export default function StudioList() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-white">{studio.nome}</p>
-                        <p className="text-xs text-muted">{pending.count} sessão(ões) pendente(s)</p>
+                        <p className="text-xs text-muted">{t('studios.pendingSessionsCount', { count: pending.count })}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-amber-400">
                           {formatCurrency(pending.total)}
                         </p>
-                        <p className="text-xs text-amber-400/60">Dar baixa →</p>
+                        <p className="text-xs text-amber-400/60">{t('studios.settleUp')}</p>
                       </div>
                     </div>
                   </Card>
@@ -82,15 +84,15 @@ export default function StudioList() {
 
       {/* All studios */}
       <div className="px-4">
-        <p className="text-xs text-muted uppercase tracking-wide mb-2">Todos os estúdios</p>
+        <p className="text-xs text-muted uppercase tracking-wide mb-2">{t('studios.allStudios')}</p>
         <div className="flex flex-col gap-2">
           {(studios || []).length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="Nenhum estúdio cadastrado"
+              title={t('studios.empty')}
               action={
                 <Button onClick={() => navigate('/studios/novo')}>
-                  <Plus size={16} /> Novo Estúdio
+                  <Plus size={16} /> {t('studios.newStudio')}
                 </Button>
               }
             />
@@ -119,7 +121,7 @@ export default function StudioList() {
                       : formatCurrency(studio.valor_padrao)}
                   </p>
                   <p className="text-xs text-muted">
-                    {studio.tipo_cobranca === 'porcentagem' ? 'comissão' : 'fixo/sessão'}
+                    {studio.tipo_cobranca === 'porcentagem' ? t('studios.commissionLabel') : t('studios.fixedPerSession')}
                   </p>
                 </div>
               </Card>
