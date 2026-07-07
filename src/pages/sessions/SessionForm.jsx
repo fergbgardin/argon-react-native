@@ -233,6 +233,7 @@ export default function SessionForm() {
     if (!form.project_id) errs.project_id = t('sessions.form.projectRequired')
     if (!form.studio_id) errs.studio_id = t('sessions.form.studioRequired')
     if (!form.data_sessao) errs.data_sessao = t('sessions.form.dateRequired')
+    if (!form.custo_material_valor) errs.custo_material = t('sessions.form.materialRequired')
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -433,6 +434,7 @@ export default function SessionForm() {
                 label={t('sessions.form.materialSize')}
                 value={form.custo_material}
                 onChange={(e) => handleMaterialSelect(e.target.value)}
+                error={errors.custo_material}
               >
                 <option value="">{t('sessions.form.selectPlaceholder')}</option>
                 <option value="pequena">{t('sessions.form.materialSmall', { value: getMaterialValue('pequena') })}</option>
