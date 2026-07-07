@@ -1,20 +1,31 @@
-// Monthly profit: one bar per month, height = lucro (entradas - saidas).
-// Gradient fill when positive, danger tone when negative. Every bar is
-// labeled with its exact value so there's no need to compare heights.
+// Monthly bars grouped by month: Lucro (signed, gradient positive / red
+// negative), Material and Despesas (always >=0, fixed hue each). All three
+// share one linear scale (same currency unit) so heights stay comparable.
+// Only the current month gets value labels, to avoid crowding six months x
+// three bars on a mobile-width chart.
 export default function CashflowChart({ data = [] }) {
   const W = 320
-  const H = 152
+  const H = 160
   const padX = 8
-  const padTop = 26
+  const padTop = 28
   const padBottom = 22
   const chartH = H - padTop - padBottom
   const n = data.length || 1
   const slot = (W - padX * 2) / n
-  const barW = Math.min(28, slot * 0.5)
+  const groupW = slot * 0.74
+  const barGap = 2
+  const barW = Math.max(4, (groupW - barGap * 2) / 3)
   const baselineY = H - padBottom
 
   const lucros = data.map((d) => (d.entradas || 0) - (d.saidas || 0))
-  const maxAbs = Math.max(1, ...lucros.map((v) => Math.abs(v)))
+  const materiais = data.map((d) => d.material || 0)
+  const despesas = data.map((d) => d.despesas || 0)
+  const maxAbs = Math.max(
+    1,
+    ...lucros.map((v) => Math.abs(v)),
+    ...materiais,
+    ...despesas
+  )
 
   const compact = (v) => {
     const sign = v < 0 ? '-' : ''
@@ -29,7 +40,7 @@ export default function CashflowChart({ data = [] }) {
   }
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Lucro mensal">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Lucro, material e despesas mensais">
       <defs>
         <linearGradient id="lucroGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f0637e" />
@@ -40,49 +51,58 @@ export default function CashflowChart({ data = [] }) {
       <line x1={padX} y1={baselineY} x2={W - padX} y2={baselineY} stroke="#2a2a33" strokeWidth="1" />
 
       {data.map((d, i) => {
-        const cx = padX + slot * i + slot / 2
-        const x = cx - barW / 2
-        const lucro = lucros[i]
-        const hasData = (d.entradas || 0) > 0 || (d.saidas || 0) > 0
-        const isLoss = lucro < 0
+        const groupX0 = padX + slot * i + (slot - groupW) / 2
         const isCurrent = i === n - 1
-        const barH = Math.max((Math.abs(lucro) / maxAbs) * chartH, hasData ? 3 : 0)
-        const monthLabel = (d.name || '').split('/')[0]
         const op = isCurrent ? 1 : 0.55
+        const hasData = (d.entradas || 0) > 0 || (d.saidas || 0) > 0 || materiais[i] > 0 || despesas[i] > 0
+
+        const bars = [
+          { value: lucros[i], color: lucros[i] < 0 ? '#f87171' : 'url(#lucroGrad)', abs: Math.abs(lucros[i]) },
+          { value: materiais[i], color: '#3987e5', abs: materiais[i] },
+          { value: despesas[i], color: '#199e70', abs: despesas[i] },
+        ]
 
         return (
           <g key={i}>
-            {hasData && (
-              <path
-                d={roundedRect(x, baselineY - barH, barW, barH, 5)}
-                fill={isLoss ? '#f87171' : 'url(#lucroGrad)'}
-                opacity={op}
-              />
-            )}
-
-            {hasData && (
-              <text
-                x={cx}
-                y={baselineY - barH - 7}
-                textAnchor="middle"
-                fontSize="8.5"
-                fontWeight={isCurrent ? '700' : '500'}
-                fontFamily="ui-monospace, monospace"
-                fill={isCurrent ? (isLoss ? '#f87171' : '#ececf1') : '#6d6d78'}
-              >
-                {compact(lucro)}
-              </text>
-            )}
+            {bars.map((bar, j) => {
+              const x = groupX0 + j * (barW + barGap)
+              const barH = Math.max((bar.abs / maxAbs) * chartH, bar.abs > 0 ? 2 : 0)
+              return (
+                <g key={j}>
+                  {bar.abs > 0 && (
+                    <path
+                      d={roundedRect(x, baselineY - barH, barW, barH, 3)}
+                      fill={bar.color}
+                      opacity={op}
+                    />
+                  )}
+                  {isCurrent && bar.abs > 0 && (
+                    <text
+                      x={x + barW / 2}
+                      y={baselineY - barH - 4}
+                      textAnchor="middle"
+                      fontSize="7"
+                      fontWeight="700"
+                      fontFamily="ui-monospace, monospace"
+                      fill={j === 0 && bar.value < 0 ? '#f87171' : '#ececf1'}
+                    >
+                      {compact(bar.value)}
+                    </text>
+                  )}
+                </g>
+              )
+            })}
 
             <text
-              x={cx}
+              x={groupX0 + groupW / 2}
               y={H - 6}
               textAnchor="middle"
               fontSize="8.5"
               fontFamily="ui-monospace, monospace"
               fill={isCurrent ? '#ececf1' : '#6d6d78'}
+              opacity={hasData ? 1 : 0.6}
             >
-              {monthLabel}
+              {(d.name || '').split('/')[0]}
             </text>
           </g>
         )
