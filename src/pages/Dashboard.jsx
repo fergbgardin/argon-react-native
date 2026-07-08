@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  TrendingUp, Wallet, AlertCircle, Cake, Building2, ChevronRight, Plus, CheckCircle2,
+  TrendingUp, Wallet, AlertCircle, Cake, Building2, Users, ChevronRight, Plus, CheckCircle2,
   CalendarDays, Banknote, Settings as SettingsIcon
 } from 'lucide-react'
 import { format, parseISO, subMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { useTranslation } from 'react-i18next'
-import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi, studiosApi, settingsApi } from '../lib/api'
+import { sessionsApi, expensesApi, clientsApi, projectPaymentsApi, studiosApi, settingsApi, systemUpdatesApi, profilesApi } from '../lib/api'
 import { isConfigured } from '../lib/supabase'
 import { formatCurrency, formatDate, formatMonthYear, activeDateFnsLocale } from '../lib/utils'
 import { useAuth, getProfile } from '../hooks/useAuth'
@@ -17,6 +17,7 @@ import Avatar from '../components/ui/Avatar'
 import AmbientGlow from '../components/ui/AmbientGlow'
 import CashflowChart from '../components/ui/CashflowChart'
 import LoadingSpinner from '../components/ui/LoadingSpinner'
+import NotificationBell from '../components/ui/NotificationBell'
 
 function greetingKey() {
   const h = new Date().getHours()
@@ -50,14 +51,27 @@ export default function Dashboard() {
   const [birthdays, setBirthdays] = useState([])
   const [upcomingSessions, setUpcomingSessions] = useState([])
   const [hasStudios, setHasStudios] = useState(true)
+  const [hasClients, setHasClients] = useState(true)
   const [hasMaterialCosts, setHasMaterialCosts] = useState(true)
   const [materialAlertDismissed, setMaterialAlertDismissed] = useState(
     () => localStorage.getItem('materialCostAlertDismissed') === 'true'
   )
+  const [systemUpdates, setSystemUpdates] = useState([])
+  const [lastSeenUpdatesAt, setLastSeenUpdatesAt] = useState(null)
 
   function dismissMaterialAlert() {
     localStorage.setItem('materialCostAlertDismissed', 'true')
     setMaterialAlertDismissed(true)
+  }
+
+  const hasUnseenUpdates = systemUpdates.length > 0 && (
+    !lastSeenUpdatesAt || new Date(systemUpdates[0].criado_em) > new Date(lastSeenUpdatesAt)
+  )
+
+  async function handleUpdatesSeen() {
+    const seenAt = new Date().toISOString()
+    setLastSeenUpdatesAt(seenAt)
+    if (user) await profilesApi.markUpdatesSeen(user.id)
   }
 
   useEffect(() => {
@@ -67,13 +81,15 @@ export default function Dashboard() {
   async function loadDashboard() {
     setLoading(true)
     try {
-      const [sessionsRes, expensesRes, clientsRes, projPaysRes, studiosRes, settingsRes] = await Promise.all([
+      const [sessionsRes, expensesRes, clientsRes, projPaysRes, studiosRes, settingsRes, updatesRes, profileRes] = await Promise.all([
         sessionsApi.list(),
         expensesApi.list(),
         clientsApi.list(),
         projectPaymentsApi.listAll(),
         studiosApi.list(),
         settingsApi.get(),
+        systemUpdatesApi.list(),
+        profilesApi.getMine(),
       ])
 
       const sessions = sessionsRes.data || []
@@ -83,7 +99,11 @@ export default function Dashboard() {
       const studios = studiosRes.data || []
       const settings = settingsRes.data
 
+      setSystemUpdates(updatesRes.data || [])
+      setLastSeenUpdatesAt(profileRes.data?.ultima_atualizacao_vista_em || null)
+
       setHasStudios(studios.length > 0)
+      setHasClients(clients.length > 0)
       setHasMaterialCosts(
         !!settings && (
           settings.custo_material_pequena > 0 ||
@@ -234,31 +254,47 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-white">{t('dashboard.title')}</h1>
           )}
         </div>
-        {profile && (
-          <button onClick={() => navigate('/config')} className="flex-shrink-0">
-            <Avatar src={profile.avatar} initials={profile.initials} size={44} />
-          </button>
-        )}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <NotificationBell
+            updates={systemUpdates}
+            hasUnseen={hasUnseenUpdates}
+            onSeen={handleUpdatesSeen}
+          />
+          {profile && (
+            <button onClick={() => navigate('/config')} className="flex-shrink-0">
+              <Avatar src={profile.avatar} initials={profile.initials} size={44} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Setup alerts — grouped, shown until each is resolved */}
-      {(!hasStudios || (!hasMaterialCosts && !materialAlertDismissed)) && (
+      {(!hasClients || !hasStudios || (!hasMaterialCosts && !materialAlertDismissed)) && (
         <div className="px-4 mb-4 flex flex-col gap-2">
-          {!hasStudios && (
-            <Card
-              className="p-3 flex items-center gap-3"
-              onClick={() => navigate('/studios/novo')}
-            >
-              <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
-                <Building2 size={16} className="text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white">{t('dashboard.setup.studio.title')}</p>
-                <p className="text-xs text-muted">{t('dashboard.setup.studio.subtitle')}</p>
-              </div>
-              <ChevronRight size={16} className="text-muted flex-shrink-0" />
-            </Card>
-          )}
+          {(!hasClients || !hasStudios) && (() => {
+            const missingBoth = !hasClients && !hasStudios
+            const onboarding = missingBoth
+              ? { icon: AlertCircle, title: t('dashboard.setup.onboarding.bothTitle'), subtitle: t('dashboard.setup.onboarding.bothSubtitle'), to: '/clientes/novo' }
+              : !hasClients
+                ? { icon: Users, title: t('dashboard.setup.onboarding.clientTitle'), subtitle: t('dashboard.setup.onboarding.clientSubtitle'), to: '/clientes/novo' }
+                : { icon: Building2, title: t('dashboard.setup.onboarding.studioTitle'), subtitle: t('dashboard.setup.onboarding.studioSubtitle'), to: '/studios/novo' }
+            const Icon = onboarding.icon
+            return (
+              <Card
+                className="p-3 flex items-center gap-3"
+                onClick={() => navigate(onboarding.to)}
+              >
+                <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                  <Icon size={16} className="text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white">{onboarding.title}</p>
+                  <p className="text-xs text-muted">{onboarding.subtitle}</p>
+                </div>
+                <ChevronRight size={16} className="text-muted flex-shrink-0" />
+              </Card>
+            )
+          })()}
           {!hasMaterialCosts && !materialAlertDismissed && (
             <Card className="p-3 flex flex-col gap-3">
               <div className="flex items-center gap-3">
@@ -354,7 +390,10 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-muted flex-shrink-0 ml-2">{formatDate(s.data_sessao)}</span>
+                <span className="text-xs text-muted flex-shrink-0 ml-2">
+                  {formatDate(s.data_sessao)}
+                  {s.hora_inicio && ` · ${s.hora_inicio.slice(0, 5)}`}
+                </span>
               </Card>
             ))}
           </div>

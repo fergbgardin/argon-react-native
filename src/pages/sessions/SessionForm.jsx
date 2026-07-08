@@ -42,6 +42,8 @@ export default function SessionForm() {
     studio_id: '',
     status: 'agendada',
     data_sessao: new Date().toISOString().split('T')[0],
+    hora_inicio: '',
+    hora_fim: '',
     custo_material: '',
     custo_material_valor: '',
     valor_comissao_estudio: '',
@@ -90,6 +92,8 @@ export default function SessionForm() {
         studio_id: s.studio_id || '',
         status: s.status || 'agendada',
         data_sessao: s.data_sessao || new Date().toISOString().split('T')[0],
+        hora_inicio: s.hora_inicio ? s.hora_inicio.slice(0, 5) : '',
+        hora_fim: s.hora_fim ? s.hora_fim.slice(0, 5) : '',
         custo_material: s.custo_material ? 'outro' : '',
         custo_material_valor: s.custo_material ?? '',
         valor_comissao_estudio: s.valor_comissao_estudio ?? '',
@@ -128,6 +132,12 @@ export default function SessionForm() {
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
     if (errors[field]) setErrors((e) => ({ ...e, [field]: null }))
+  }
+
+  // "Fim" só faz sentido depois que "início" for preenchido — limpa fim
+  // automaticamente se início for apagado, evitando o estado inválido.
+  function handleHoraInicio(value) {
+    setForm((f) => ({ ...f, hora_inicio: value, hora_fim: value ? f.hora_fim : '' }))
   }
 
   // Recalculate commission when studio or payment changes
@@ -248,6 +258,8 @@ export default function SessionForm() {
       studio_id: form.studio_id || null,
       status: form.status,
       data_sessao: form.data_sessao,
+      hora_inicio: form.hora_inicio || null,
+      hora_fim: form.hora_inicio && form.hora_fim ? form.hora_fim : null,
       custo_material: form.custo_material_valor ? parseFloat(form.custo_material_valor) : null,
       valor_comissao_estudio: form.valor_comissao_estudio ? parseFloat(form.valor_comissao_estudio) : null,
       valor_sessao: sessionValorFechado ? parseFloat(sessionValorFechado) : null,
@@ -353,6 +365,22 @@ export default function SessionForm() {
               <option value="agendada">{t('common.sessionStatus.scheduled')}</option>
               <option value="concluida">{t('common.sessionStatus.completed')}</option>
             </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label={t('sessions.form.timeStart')}
+              type="time"
+              value={form.hora_inicio}
+              onChange={(e) => handleHoraInicio(e.target.value)}
+            />
+            <Input
+              label={t('sessions.form.timeEnd')}
+              type="time"
+              value={form.hora_fim}
+              disabled={!form.hora_inicio}
+              onChange={(e) => handleChange('hora_fim', e.target.value)}
+            />
           </div>
         </Card>
 

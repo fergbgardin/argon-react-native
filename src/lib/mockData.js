@@ -67,4 +67,12 @@ export const mock = {
     presets_agulhas: ['RL #3', 'RL #5', 'RL #7', 'RL #9', 'RM #5', 'RM #7', 'RS #5'],
     presets_pigmentos: ['Intenze Black', 'Dynamic Black', 'Fusion White'],
   },
+  systemUpdates: [
+    {
+      id: '1',
+      titulo: 'Bem-vindo ao sino de avisos',
+      corpo: 'A partir de agora você recebe novidades e atualizações do sistema por aqui.',
+      criado_em: '2026-07-07T12:00:00Z',
+    },
+  ],
 }

@@ -1,10 +1,9 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, CalendarDays, FolderKanban, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, labelKey: 'components.nav.home' },
-  { to: '/sessoes', icon: CalendarDays, labelKey: 'components.nav.sessions' },
   { to: '/projetos', icon: FolderKanban, labelKey: 'components.nav.projects' },
   { to: '/clientes', icon: Users, labelKey: 'components.nav.clients' },
   { to: '/config', icon: Settings, labelKey: 'components.nav.settings' },

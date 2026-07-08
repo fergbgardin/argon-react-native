@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, CalendarDays, CheckCircle2, Clock, Building2, Syringe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { sessionsApi } from '../../lib/api'
+import { sessionsApi, studiosApi } from '../../lib/api'
 import { formatDate, formatCurrency } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
 import Card from '../../components/ui/Card'
@@ -22,8 +22,11 @@ export default function SessionList() {
   }
   const [filter, setFilter] = useState('todas')
   const { data: sessions, loading, refetch } = useData(() => sessionsApi.list())
+  const { data: studios, loading: stLoading } = useData(() => studiosApi.list())
 
-  if (loading) return <LoadingSpinner fullPage />
+  if (loading || stLoading) return <LoadingSpinner fullPage />
+
+  const noStudios = (studios || []).length === 0
 
   const filtered = (sessions || []).filter((s) => {
     if (filter === 'todas') return true
@@ -65,10 +68,30 @@ export default function SessionList() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
         <h1 className="text-2xl font-bold text-white">{t('sessions.title')}</h1>
-        <Button size="icon" onClick={() => navigate('/sessoes/nova')}>
+        <Button size="icon" disabled={noStudios} onClick={() => navigate('/sessoes/nova')}>
           <Plus size={18} />
         </Button>
       </div>
+
+      {/* Onboarding alert — needs a studio before creating a session */}
+      {noStudios && (
+        <div className="px-4 mb-4">
+          <Card className="p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                <Building2 size={16} className="text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">{t('sessions.list.noStudiosTitle')}</p>
+                <p className="text-xs text-muted">{t('sessions.list.noStudiosDescription')}</p>
+              </div>
+            </div>
+            <Button size="sm" variant="secondary" onClick={() => navigate('/studios/novo')}>
+              <Plus size={14} /> {t('studios.newStudio')}
+            </Button>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="px-4 flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
@@ -92,7 +115,7 @@ export default function SessionList() {
             description={filter === 'todas' ? t('sessions.list.emptyDescriptionAll') : t('sessions.list.emptyDescriptionFiltered')}
             action={
               filter === 'todas' && (
-                <Button onClick={() => navigate('/sessoes/nova')}>
+                <Button disabled={noStudios} onClick={() => navigate('/sessoes/nova')}>
                   <Plus size={16} /> {t('sessions.list.newSession')}
                 </Button>
               )
@@ -131,6 +154,7 @@ export default function SessionList() {
                       <span className="text-xs text-muted flex items-center gap-1">
                         <CalendarDays size={12} />
                         {formatDate(session.data_sessao)}
+                        {session.hora_inicio && ` · ${session.hora_inicio.slice(0, 5)}${session.hora_fim ? `–${session.hora_fim.slice(0, 5)}` : ''}`}
                       </span>
                       {session.studios && (
                         <span className="text-xs text-muted">{session.studios.nome}</span>

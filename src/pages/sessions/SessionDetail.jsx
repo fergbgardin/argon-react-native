@@ -109,7 +109,10 @@ export default function SessionDetail() {
             <Badge variant={isAgendada ? 'warning' : 'success'}>
               {isAgendada ? t('common.sessionStatus.scheduled') : t('common.sessionStatus.completed')}
             </Badge>
-            <span className="text-sm text-muted">{formatDate(session.data_sessao)}</span>
+            <span className="text-sm text-muted">
+              {formatDate(session.data_sessao)}
+              {session.hora_inicio && ` · ${session.hora_inicio.slice(0, 5)}${session.hora_fim ? `–${session.hora_fim.slice(0, 5)}` : ''}`}
+            </span>
           </div>
 
           {client?.alerta_saude && (

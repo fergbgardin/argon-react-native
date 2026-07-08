@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, FolderKanban, Search, X, Building2, Syringe } from 'lucide-react'
+import { Plus, FolderKanban, Search, X, Building2, Syringe, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { projectsApi, sessionsApi } from '../../lib/api'
+import { projectsApi, sessionsApi, clientsApi } from '../../lib/api'
 import { useData } from '../../hooks/useData'
 import { formatCurrency } from '../../lib/utils'
 import Card from '../../components/ui/Card'
@@ -26,8 +26,11 @@ export default function ProjectList() {
   const [search, setSearch] = useState('')
   const { data: projects, loading } = useData(() => projectsApi.list())
   const { data: sessions, loading: sLoading } = useData(() => sessionsApi.list())
+  const { data: clients, loading: cLoading } = useData(() => clientsApi.list())
 
-  if (loading || sLoading) return <LoadingSpinner fullPage />
+  if (loading || sLoading || cLoading) return <LoadingSpinner fullPage />
+
+  const noClients = (clients || []).length === 0
 
   // Count concluded sessions per project
   const doneByProject = {}
@@ -76,10 +79,30 @@ export default function ProjectList() {
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)' }}
       >
         <h1 className="text-2xl font-bold text-white">{t('projects.title')}</h1>
-        <Button size="icon" onClick={() => navigate('/projetos/novo')}>
+        <Button size="icon" disabled={noClients} onClick={() => navigate('/projetos/novo')}>
           <Plus size={18} />
         </Button>
       </div>
+
+      {/* Onboarding alert — needs a client before creating a project */}
+      {noClients && (
+        <div className="px-4 mb-4">
+          <Card className="p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-amber-500/10 rounded-lg flex-shrink-0">
+                <Users size={16} className="text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white">{t('projects.list.noClientsTitle')}</p>
+                <p className="text-xs text-muted">{t('projects.list.noClientsDescription')}</p>
+              </div>
+            </div>
+            <Button size="sm" variant="secondary" onClick={() => navigate('/clientes/novo')}>
+              <Plus size={14} /> {t('clients.list.newClient')}
+            </Button>
+          </Card>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-4 mb-3">
@@ -119,7 +142,7 @@ export default function ProjectList() {
             title={t('projects.list.emptyTitle')}
             action={
               filter === 'ativo' && (
-                <Button onClick={() => navigate('/projetos/novo')}>
+                <Button disabled={noClients} onClick={() => navigate('/projetos/novo')}>
                   <Plus size={16} /> {t('projects.list.newProject')}
                 </Button>
               )

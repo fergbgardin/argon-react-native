@@ -164,14 +164,31 @@ export const settingsApi = {
     : mockResponse(data),
 }
 
-// ── Profiles (privacy acceptance) ─────────────────────────
+// ── Profiles (privacy acceptance, changelog last-seen) ────
 export const profilesApi = {
   get: (userId) => isConfigured
     ? supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-    : mockResponse({ id: userId, privacy_accepted_at: new Date().toISOString() }),
+    : mockResponse({ id: userId, privacy_accepted_at: new Date().toISOString(), ultima_atualizacao_vista_em: null }),
+  // Relies on RLS (id = auth.uid()) instead of a client-side user id — safe
+  // to call before the caller's own useAuth() hook has resolved its user,
+  // since the supabase client's session token is restored independently of
+  // that React state.
+  getMine: () => isConfigured
+    ? supabase.from('profiles').select('*').maybeSingle()
+    : mockResponse({ id: 'mock', privacy_accepted_at: new Date().toISOString(), ultima_atualizacao_vista_em: null }),
   acceptPrivacy: (userId) => isConfigured
     ? supabase.from('profiles').upsert({ id: userId, privacy_accepted_at: new Date().toISOString() }, { onConflict: 'id' }).select().single()
     : mockResponse({ id: userId, privacy_accepted_at: new Date().toISOString() }),
+  markUpdatesSeen: (userId) => isConfigured
+    ? supabase.from('profiles').upsert({ id: userId, ultima_atualizacao_vista_em: new Date().toISOString() }, { onConflict: 'id' }).select().single()
+    : mockResponse({ id: userId, ultima_atualizacao_vista_em: new Date().toISOString() }),
+}
+
+// ── System Updates (sino de avisos) ───────────────────────
+export const systemUpdatesApi = {
+  list: () => isConfigured
+    ? supabase.from('system_updates').select('*').order('criado_em', { ascending: false })
+    : mockResponse([...mock.systemUpdates]),
 }
 
 // ── File Upload ───────────────────────────────────────────

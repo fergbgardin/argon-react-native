@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Plus, Edit, Trash2, AlertTriangle, ExternalLink } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { projectsApi, sessionsApi, projectPaymentsApi } from '../../lib/api'
+import { projectsApi, sessionsApi, projectPaymentsApi, studiosApi } from '../../lib/api'
 import { formatDate, formatCurrency, whatsappLink } from '../../lib/utils'
 import { useData } from '../../hooks/useData'
 import PageHeader from '../../components/ui/PageHeader'
@@ -42,8 +42,9 @@ export default function ProjectDetail() {
   const { data: projectPayments, loading: ppLoading, refetch: reloadPayments } = useData(
     () => projectPaymentsApi.list(id), [id]
   )
+  const { data: studios, loading: stLoading } = useData(() => studiosApi.list())
 
-  if (pLoading || sLoading || ppLoading) return <LoadingSpinner fullPage />
+  if (pLoading || sLoading || ppLoading || stLoading) return <LoadingSpinner fullPage />
   if (!pLoading && !project) return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-4">
       <p className="text-muted">{t('projects.detail.notFound')}</p>
@@ -51,6 +52,7 @@ export default function ProjectDetail() {
     </div>
   )
 
+  const noStudios = (studios || []).length === 0
   const isFechado = project.tipo_cobranca === 'fechado'
   const client = project.clients
   const cfg = statusConfig[project.status] || statusConfig.ativo
@@ -301,11 +303,18 @@ export default function ProjectDetail() {
               size="sm"
               variant="secondary"
               className="border border-primary/40 text-primary"
+              disabled={noStudios}
               onClick={() => navigate(`/sessoes/nova?project_id=${id}`)}
             >
               <Plus size={14} /> {t('projects.detail.newSession')}
             </Button>
           </div>
+
+          {noStudios && (
+            <p className="text-xs text-amber-400 mb-2">
+              {t('projects.detail.needStudioForSession')}
+            </p>
+          )}
 
           <div className="flex flex-col gap-2">
             {(sessions || []).length === 0 ? (
@@ -321,7 +330,9 @@ export default function ProjectDetail() {
                     <div>
                       <p className="text-sm text-white">{t('projects.detail.sessionNumber', { number: sessionNumberMap[s.id] })}</p>
                       <p className="text-xs text-muted">
-                        {formatDate(s.data_sessao)}{s.studios?.nome ? ` · ${s.studios.nome}` : ''}
+                        {formatDate(s.data_sessao)}
+                        {s.hora_inicio && ` · ${s.hora_inicio.slice(0, 5)}${s.hora_fim ? `–${s.hora_fim.slice(0, 5)}` : ''}`}
+                        {s.studios?.nome ? ` · ${s.studios.nome}` : ''}
                       </p>
                     </div>
                     <Badge variant={s.status === 'concluida' ? 'success' : 'warning'}>

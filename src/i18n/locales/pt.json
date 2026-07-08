@@ -34,9 +34,13 @@
       "evening": "Boa noite, {{name}}"
     },
     "setup": {
-      "studio": {
-        "title": "Cadastre um estúdio",
-        "subtitle": "Necessário para registrar sessões"
+      "onboarding": {
+        "clientTitle": "Cadastre um cliente",
+        "clientSubtitle": "Necessário para criar projetos",
+        "studioTitle": "Cadastre um estúdio",
+        "studioSubtitle": "Necessário para registrar sessões",
+        "bothTitle": "Cadastre cliente e estúdio",
+        "bothSubtitle": "Necessários para criar projetos e sessões"
       },
       "material": {
         "title": "Custo de material no padrão",
@@ -79,6 +83,10 @@
       "newExpense": "Nova Despesa"
     }
   },
+  "notifications": {
+    "title": "Novidades",
+    "empty": "Nenhuma novidade por enquanto."
+  },
   "login": {
     "tagline": "Gestão para tatuadores",
     "googleButton": "Entrar com Google",
@@ -87,7 +95,6 @@
   "components": {
     "nav": {
       "home": "Início",
-      "sessions": "Sessões",
       "projects": "Projetos",
       "clients": "Clientes",
       "settings": "Config"
@@ -285,7 +292,9 @@
         "all": "Todos"
       },
       "emptyTitle": "Nenhum projeto encontrado",
-      "newProject": "Novo Projeto"
+      "newProject": "Novo Projeto",
+      "noClientsTitle": "Você precisa de um cliente antes de criar um projeto",
+      "noClientsDescription": "Cadastre um cliente para poder iniciar um novo projeto."
     },
     "form": {
       "editTitle": "Editar Projeto",
@@ -337,6 +346,7 @@
       "registerPayment": "Registrar pagamento",
       "sessionsTitle": "Sessões",
       "newSession": "Nova sessão",
+      "needStudioForSession": "Cadastre um estúdio antes de registrar uma sessão",
       "noSessions": "Nenhuma sessão registrada",
       "sessionNumber": "Sessão {{number}}",
       "pause": "Pausar",
@@ -363,7 +373,9 @@
       "emptyDescriptionAll": "Adicione sua primeira sessão.",
       "emptyDescriptionFiltered": "Nenhuma sessão com este filtro.",
       "newSession": "Nova Sessão",
-      "sessionNumber": "· Sessão {{number}}"
+      "sessionNumber": "· Sessão {{number}}",
+      "noStudiosTitle": "Você precisa de um estúdio antes de registrar uma sessão",
+      "noStudiosDescription": "Cadastre um estúdio para poder criar uma nova sessão."
     },
     "detail": {
       "notFound": "Sessão não encontrada",
@@ -413,6 +425,8 @@
       "materialRequired": "Selecione o custo de material",
       "date": "Data *",
       "status": "Status",
+      "timeStart": "Início",
+      "timeEnd": "Fim",
       "noStudiosTitle": "Cadastre um estúdio primeiro",
       "noStudiosDescription": "Toda sessão precisa estar vinculada a um estúdio. Cadastre pelo menos um antes de criar sessões.",
       "registerStudio": "Cadastrar Estúdio",

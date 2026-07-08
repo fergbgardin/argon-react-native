@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export default function Modal({ open, onClose, title, children }) {
@@ -10,7 +11,12 @@ export default function Modal({ open, onClose, title, children }) {
 
   if (!open) return null
 
-  return (
+  // Rendered via portal to document.body: a fixed-position modal nested
+  // inside an ancestor with backdrop-filter (e.g. the glass-header the
+  // notification bell lives in) would otherwise be confined to that
+  // ancestor's box instead of the viewport — backdrop-filter/filter create
+  // a new containing block for fixed descendants, same as transform does.
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
       onClick={onClose}
@@ -30,6 +36,7 @@ export default function Modal({ open, onClose, title, children }) {
         )}
         <div className="p-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
