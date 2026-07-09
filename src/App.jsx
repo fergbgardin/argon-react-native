@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import BottomNav from './components/ui/BottomNav'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
+import Maintenance from './pages/Maintenance'
 import SessionList from './pages/sessions/SessionList'
 import SessionForm from './pages/sessions/SessionForm'
 import SessionDetail from './pages/sessions/SessionDetail'
@@ -21,8 +22,13 @@ import PrivacyGate from './components/PrivacyGate'
 import { useAuth } from './hooks/useAuth'
 import { isConfigured } from './lib/supabase'
 
+// Desligar (false) quando a manutenção terminar.
+const MAINTENANCE_MODE = true
+
 export default function App() {
   const { session, loading } = useAuth()
+
+  if (MAINTENANCE_MODE) return <Maintenance />
 
   if (loading) return <LoadingSpinner fullPage />
 
